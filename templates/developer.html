@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HealthAI — Developer Portal</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-icon" style="background:linear-gradient(135deg,#a855f7,#ec4899)">&lt;/&gt;</div>
+    <div><div class="brand-name">Dev Portal</div><div class="brand-sub">HealthAI System</div></div>
+  </div>
+  <nav class="sidebar-nav">
+    <a class="nav-item active" onclick="switchTab('home',this)"><span class="nav-icon">⌂</span>Overview</a>
+    <a class="nav-item" onclick="switchTab('database',this)"><span class="nav-icon">▣</span>Database</a>
+    <a class="nav-item" onclick="switchTab('api',this)"><span class="nav-icon">◎</span>API Monitor</a>
+    <a class="nav-item" onclick="switchTab('users',this)"><span class="nav-icon">♟</span>All Users</a>
+    <a class="nav-item" onclick="switchTab('logs',this)"><span class="nav-icon">≡</span>Live Logs</a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-card" id="sidebarUser"></div>
+    <button class="logout-btn" onclick="doLogout()">Sign Out</button>
+  </div>
+</div>
+
+<div class="main-content">
+  <div class="topbar">
+    <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+    <div class="topbar-title" id="topbarTitle">Developer Overview</div>
+    <div class="topbar-actions">
+      <div class="avatar-btn" id="topAvatar" style="background:linear-gradient(135deg,#a855f7,#ec4899)"></div>
+    </div>
+  </div>
+
+  <!-- HOME -->
+  <div id="tab-home" class="tab-content active">
+    <div class="welcome-banner" style="background:linear-gradient(135deg,#1a0533,#0d0a1a)">
+      <div style="font-size:13px;color:#a855f7;margin-bottom:6px;font-family:monospace">$ whoami → developer</div>
+      <div style="font-size:26px;font-weight:800;margin-bottom:6px;background:linear-gradient(135deg,#a855f7,#ec4899);-webkit-background-clip:text;-webkit-text-fill-color:transparent" id="devGreet">Loading...</div>
+      <div style="font-size:14px;color:#8892b0;font-family:monospace">Read-only system access · HealthAI v1.0.0</div>
+    </div>
+    <div class="quick-stats" id="devStats"></div>
+    <div style="margin-top:20px;display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div class="chart-card">
+        <h3 style="font-family:monospace;color:#a855f7">System info</h3>
+        <div id="sysInfo" style="font-family:monospace;font-size:13px;color:#8892b0;line-height:2"></div>
+      </div>
+      <div class="chart-card">
+        <h3 style="font-family:monospace;color:#a855f7">API endpoints</h3>
+        <div style="font-family:monospace;font-size:12px;color:#8892b0;line-height:1.8">
+          <div><span style="color:#10b981">GET</span> /api/current-user</div>
+          <div><span style="color:#f59e0b">POST</span> /api/login</div>
+          <div><span style="color:#f59e0b">POST</span> /api/predict</div>
+          <div><span style="color:#10b981">GET</span> /api/medicines</div>
+          <div><span style="color:#f59e0b">POST</span> /api/appointment</div>
+          <div><span style="color:#10b981">GET</span> /api/admin/analytics</div>
+          <div><span style="color:#10b981">GET</span> /api/doctor/appointments</div>
+          <div><span style="color:#ef4444">DELETE</span> /api/admin/delete-user/id</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DATABASE -->
+  <div id="tab-database" class="tab-content">
+    <div class="section-header"><h2 style="font-family:monospace">Database Monitor</h2><p>SQLite table statistics</p></div>
+    <div id="dbStats"></div>
+  </div>
+
+  <!-- API -->
+  <div id="tab-api" class="tab-content">
+    <div class="section-header"><h2 style="font-family:monospace">API Test Console</h2><p>Test live API endpoints</p></div>
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:24px">
+      <div style="display:flex;gap:10px;margin-bottom:16px">
+        <select id="apiMethod" style="padding:10px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:13px;outline:none">
+          <option>GET</option><option>POST</option>
+        </select>
+        <input type="text" id="apiEndpoint" value="/api/stats" style="flex:1;padding:10px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;outline:none;font-family:monospace">
+        <button onclick="testApi()" class="primary-btn" style="background:linear-gradient(135deg,#a855f7,#ec4899)">Send →</button>
+      </div>
+      <div style="font-family:monospace;font-size:13px;color:#8892b0;margin-bottom:8px">Response:</div>
+      <pre id="apiResponse" style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:16px;font-size:12px;color:#4ade80;overflow:auto;max-height:400px;font-family:monospace;white-space:pre-wrap">Click Send to test an endpoint</pre>
+    </div>
+  </div>
+
+  <!-- USERS -->
+  <div id="tab-users" class="tab-content">
+    <div class="section-header"><h2 style="font-family:monospace">All Users (Read-only)</h2><p>System user overview</p></div>
+    <div id="devUsersList"></div>
+  </div>
+
+  <!-- LOGS -->
+  <div id="tab-logs" class="tab-content">
+    <div class="section-header"><h2 style="font-family:monospace">Live Activity Logs</h2><p>Recent system activity</p></div>
+    <div id="logsContainer"></div>
+    <button class="primary-btn" style="margin-top:16px;background:linear-gradient(135deg,#a855f7,#ec4899)" onclick="loadLogs()">↻ Refresh</button>
+  </div>
+</div>
+
+<div id="toastContainer" style="position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px"></div>
+<script>
+let currentUser=null;
+async function init(){
+  const res=await fetch('/api/current-user');
+  if(!res.ok){window.location.href='/login';return;}
+  currentUser=await res.json();
+  document.getElementById('topAvatar').textContent=currentUser.avatar;
+  document.getElementById('sidebarUser').innerHTML=`<div style="font-size:13px;font-weight:600;font-family:monospace">${currentUser.name}</div><div style="font-size:11px;color:#a855f7">developer</div>`;
+  document.getElementById('devGreet').textContent=currentUser.name;
+  loadOverview();
+}
+
+async function loadOverview(){
+  const res=await fetch('/api/dev/db-stats');
+  const data=await res.json();
+  const c=data.counts;
+  document.getElementById('devStats').innerHTML=`
+    <div class="qs-card"><div class="qs-num" style="color:#a855f7">${c.users}</div><div class="qs-label" style="font-family:monospace">users</div></div>
+    <div class="qs-card"><div class="qs-num" style="color:#10b981">${c.appointments}</div><div class="qs-label" style="font-family:monospace">appointments</div></div>
+    <div class="qs-card"><div class="qs-num" style="color:#4f8ef7">${c.messages}</div><div class="qs-label" style="font-family:monospace">messages</div></div>
+    <div class="qs-card"><div class="qs-num" style="color:#f59e0b">${c.orders}</div><div class="qs-label" style="font-family:monospace">orders</div></div>
+    <div class="qs-card"><div class="qs-num" style="color:#ec4899">${c.prescriptions}</div><div class="qs-label" style="font-family:monospace">prescriptions</div></div>
+    <div class="qs-card"><div class="qs-num" style="color:#06b6d4">${c.health_records}</div><div class="qs-label" style="font-family:monospace">health_records</div></div>
+    <div class="qs-card"><div class="qs-num" style="color:#84cc16">${c.medicines}</div><div class="qs-label" style="font-family:monospace">medicines</div></div>
+  `;
+  document.getElementById('sysInfo').innerHTML=`
+    <div>Platform: <span style="color:#a855f7">HealthAI Pro v1.0</span></div>
+    <div>Backend: <span style="color:#10b981">Python Flask</span></div>
+    <div>Database: <span style="color:#4f8ef7">SQLite via SQLAlchemy</span></div>
+    <div>ML Model: <span style="color:#f59e0b">Random Forest (scikit-learn)</span></div>
+    <div>Auth: <span style="color:#ec4899">Flask-Login + Werkzeug</span></div>
+    <div>Status: <span style="color:#10b981">● Running</span></div>
+  `;
+}
+
+function switchTab(tab,el){
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  const titles={home:'Developer Overview',database:'Database Monitor',api:'API Console',users:'All Users',logs:'Live Logs'};
+  document.getElementById('topbarTitle').textContent=titles[tab]||tab;
+  if(el)el.classList.add('active');
+  if(tab==='database')loadDatabase();
+  if(tab==='users')loadDevUsers();
+  if(tab==='logs')loadLogs();
+}
+
+async function loadDatabase(){
+  const res=await fetch('/api/dev/db-stats');
+  const data=await res.json();
+  document.getElementById('dbStats').innerHTML=data.tables.map(t=>`
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px 20px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between">
+      <div style="font-family:monospace;font-size:15px;font-weight:600;color:#a855f7">${t}</div>
+      <div style="font-family:monospace;font-size:13px;color:#8892b0">${data.counts[t]||0} rows</div>
+    </div>`).join('');
+}
+
+async function testApi(){
+  const method=document.getElementById('apiMethod').value;
+  const endpoint=document.getElementById('apiEndpoint').value;
+  const pre=document.getElementById('apiResponse');
+  pre.textContent='Loading...';pre.style.color='#8892b0';
+  try{
+    const res=await fetch(endpoint,{method,headers:{'Content-Type':'application/json'}});
+    const data=await res.json();
+    pre.textContent=JSON.stringify(data,null,2);
+    pre.style.color=res.ok?'#4ade80':'#f87171';
+  }catch(e){pre.textContent='Error: '+e.message;pre.style.color='#f87171';}
+}
+
+async function loadDevUsers(){
+  const res=await fetch('/api/admin/users');
+  const data=await res.json();
+  document.getElementById('devUsersList').innerHTML=`
+    <table style="width:100%;border-collapse:collapse;font-size:13px;font-family:monospace">
+      <thead><tr style="color:#8892b0;border-bottom:1px solid var(--border)">
+        <th style="padding:10px 8px;text-align:left">ID</th><th style="padding:10px 8px;text-align:left">Name</th>
+        <th style="padding:10px 8px;text-align:left">Email</th><th style="padding:10px 8px;text-align:left">Role</th>
+        <th style="padding:10px 8px;text-align:left">Joined</th><th style="padding:10px 8px;text-align:left">Banned</th>
+      </tr></thead>
+      <tbody>${(data.users||[]).map(u=>`
+        <tr style="border-bottom:1px solid var(--border)">
+          <td style="padding:10px 8px;color:#8892b0">#${u.id}</td>
+          <td style="padding:10px 8px;font-weight:500">${u.name}</td>
+          <td style="padding:10px 8px;color:#8892b0">${u.email}</td>
+          <td style="padding:10px 8px;color:#a855f7">${u.role}</td>
+          <td style="padding:10px 8px;color:#8892b0">${u.created_at}</td>
+          <td style="padding:10px 8px;color:${u.is_banned?'#ef4444':'#10b981'}">${u.is_banned?'true':'false'}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>`;
+}
+
+async function loadLogs(){
+  const res=await fetch('/api/dev/logs');
+  const data=await res.json();
+  document.getElementById('logsContainer').innerHTML=`
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:16px">
+      <div style="font-family:monospace;color:#a855f7;margin-bottom:12px;font-size:14px">Recent signups</div>
+      ${data.recent_signups.map(u=>`<div style="font-family:monospace;font-size:13px;color:#8892b0;padding:6px 0;border-bottom:1px solid var(--border)"><span style="color:#4ade80">[${u.date}]</span> NEW_USER: <span style="color:#fff">${u.name}</span> (${u.role})</div>`).join('')}
+    </div>
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:20px">
+      <div style="font-family:monospace;color:#a855f7;margin-bottom:12px;font-size:14px">Recent appointments</div>
+      ${data.recent_appointments.map(a=>`<div style="font-family:monospace;font-size:13px;color:#8892b0;padding:6px 0;border-bottom:1px solid var(--border)"><span style="color:#f59e0b">[${a.date}]</span> APPOINTMENT: <span style="color:#fff">${a.patient}</span> → ${a.doctor} [${a.status}]</div>`).join('')}
+    </div>`;
+}
+
+function doLogout(){fetch('/api/logout').then(()=>window.location.href='/login');}
+function toggleSidebar(){document.getElementById('sidebar').classList.toggle('open');}
+function showToast(msg,type='info'){
+  const tc=document.getElementById('toastContainer');const t=document.createElement('div');t.className=`toast ${type}`;
+  t.innerHTML=`<span>ℹ</span><span>${msg}</span>`;tc.appendChild(t);setTimeout(()=>t.remove(),3500);
+}
+window.addEventListener('DOMContentLoaded',init);
+</script>
+</body>
+</html>

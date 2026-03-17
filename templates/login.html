@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HealthAI Pro — Login</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600;700&display=swap');
+
+*{margin:0;padding:0;box-sizing:border-box}
+
+body{
+  font-family:'Inter',sans-serif;
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+  background:#0a0a1a;
+}
+
+/* ANIMATED BACKGROUND */
+.bg-animate{
+  position:fixed;inset:0;
+  background:linear-gradient(135deg,#0a0a1a,#1a0a2e,#0a1a2e,#1a1a0a);
+  background-size:400% 400%;
+  animation:bgMove 8s ease infinite;
+  z-index:0;
+}
+@keyframes bgMove{
+  0%{background-position:0% 50%}
+  50%{background-position:100% 50%}
+  100%{background-position:0% 50%}
+}
+
+/* ORBS */
+.orb{
+  position:fixed;
+  border-radius:50%;
+  filter:blur(80px);
+  opacity:0.15;
+  animation:orbFloat ease-in-out infinite;
+  pointer-events:none;
+  z-index:0;
+}
+.orb1{width:600px;height:600px;background:#4f8ef7;top:-200px;left:-200px;animation-duration:12s;animation-delay:0s}
+.orb2{width:500px;height:500px;background:#a855f7;bottom:-200px;right:-200px;animation-duration:10s;animation-delay:2s}
+.orb3{width:400px;height:400px;background:#e91e63;top:50%;left:50%;animation-duration:14s;animation-delay:4s}
+.orb4{width:300px;height:300px;background:#10b981;bottom:20%;left:10%;animation-duration:11s;animation-delay:1s}
+
+@keyframes orbFloat{
+  0%,100%{transform:translateY(0) scale(1)}
+  33%{transform:translateY(-30px) scale(1.05)}
+  66%{transform:translateY(20px) scale(0.95)}
+}
+
+/* CANVAS PARTICLES */
+canvas{position:fixed;inset:0;z-index:1;pointer-events:none}
+
+/* MAIN WRAPPER */
+.login-wrapper{
+  position:relative;
+  z-index:10;
+  display:flex;
+  width:920px;
+  max-width:95vw;
+  min-height:580px;
+  border-radius:28px;
+  overflow:hidden;
+  box-shadow:0 30px 80px rgba(0,0,0,0.6),0 0 0 1px rgba(255,255,255,0.06);
+}
+
+/* LEFT PANEL */
+.login-left{
+  flex:1;
+  background:linear-gradient(135deg,rgba(79,142,247,0.12),rgba(168,85,247,0.12));
+  backdrop-filter:blur(30px);
+  border-right:1px solid rgba(255,255,255,0.08);
+  padding:50px 40px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  position:relative;
+  overflow:hidden;
+}
+
+.login-left::before{
+  content:'';
+  position:absolute;
+  top:-100px;right:-100px;
+  width:300px;height:300px;
+  background:radial-gradient(circle,rgba(79,142,247,0.2),transparent 70%);
+  border-radius:50%;
+  animation:glowPulse 3s ease infinite;
+}
+
+.login-left::after{
+  content:'';
+  position:absolute;
+  bottom:-80px;left:-80px;
+  width:250px;height:250px;
+  background:radial-gradient(circle,rgba(168,85,247,0.15),transparent 70%);
+  border-radius:50%;
+  animation:glowPulse 4s ease infinite reverse;
+}
+
+@keyframes glowPulse{
+  0%,100%{transform:scale(1);opacity:0.6}
+  50%{transform:scale(1.2);opacity:1}
+}
+
+/* LOGO ANIMATION */
+.logo-wrap{
+  display:flex;align-items:center;gap:14px;
+  margin-bottom:40px;
+  animation:logoSlide 0.8s cubic-bezier(0.34,1.56,0.64,1) both;
+}
+@keyframes logoSlide{
+  from{opacity:0;transform:translateX(-30px)}
+  to{opacity:1;transform:translateX(0)}
+}
+
+.logo-icon{
+  width:56px;height:56px;
+  background:linear-gradient(135deg,#4f8ef7,#a855f7);
+  border-radius:16px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:28px;font-weight:900;color:#fff;
+  box-shadow:0 0 30px rgba(79,142,247,0.5);
+  animation:iconSpin 0.8s cubic-bezier(0.34,1.56,0.64,1) 0.3s both,iconGlow 3s ease infinite 1s;
+  flex-shrink:0;
+}
+@keyframes iconSpin{
+  from{transform:rotate(-180deg) scale(0)}
+  to{transform:rotate(0) scale(1)}
+}
+@keyframes iconGlow{
+  0%,100%{box-shadow:0 0 30px rgba(79,142,247,0.5)}
+  50%{box-shadow:0 0 50px rgba(79,142,247,0.8),0 0 80px rgba(168,85,247,0.4)}
+}
+
+.logo-text{
+  font-family:'Orbitron',sans-serif;
+  font-size:20px;font-weight:700;
+  background:linear-gradient(135deg,#fff,#a855f7);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  animation:logoSlide 0.8s cubic-bezier(0.34,1.56,0.64,1) 0.1s both;
+}
+.logo-sub{font-size:11px;color:rgba(255,255,255,0.5);margin-top:2px;letter-spacing:1px}
+
+.hero-title{
+  font-size:34px;font-weight:800;
+  line-height:1.25;
+  margin-bottom:14px;
+  background:linear-gradient(135deg,#ffffff,#a855f7,#4f8ef7);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  animation:heroReveal 0.8s ease 0.4s both;
+}
+@keyframes heroReveal{
+  from{opacity:0;transform:translateY(20px)}
+  to{opacity:1;transform:translateY(0)}
+}
+
+.hero-sub{
+  color:rgba(255,255,255,0.55);
+  font-size:14px;line-height:1.7;
+  margin-bottom:36px;
+  animation:heroReveal 0.8s ease 0.5s both;
+}
+
+.feature-list{
+  display:flex;flex-direction:column;gap:13px;
+  animation:heroReveal 0.8s ease 0.6s both;
+}
+
+.feature-item{
+  display:flex;align-items:center;gap:12px;
+  color:rgba(255,255,255,0.75);
+  font-size:13px;
+  padding:10px 14px;
+  background:rgba(255,255,255,0.04);
+  border:1px solid rgba(255,255,255,0.06);
+  border-radius:12px;
+  transition:all 0.3s;
+}
+.feature-item:hover{
+  background:rgba(255,255,255,0.08);
+  border-color:rgba(79,142,247,0.3);
+  transform:translateX(5px);
+  color:#fff;
+}
+.feature-dot{
+  width:8px;height:8px;
+  border-radius:50%;flex-shrink:0;
+}
+
+/* RIGHT PANEL */
+.login-right{
+  width:420px;
+  background:rgba(8,8,20,0.85);
+  backdrop-filter:blur(40px);
+  padding:50px 40px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  position:relative;
+}
+
+.form-title{
+  font-size:26px;font-weight:700;
+  color:#fff;margin-bottom:5px;
+  animation:heroReveal 0.6s ease 0.2s both;
+}
+.form-sub{
+  color:rgba(255,255,255,0.45);
+  font-size:13px;margin-bottom:28px;
+  animation:heroReveal 0.6s ease 0.3s both;
+}
+
+/* ROLE TABS */
+.role-tabs{
+  display:flex;gap:6px;
+  background:rgba(255,255,255,0.04);
+  padding:5px;border-radius:14px;
+  margin-bottom:26px;
+  border:1px solid rgba(255,255,255,0.06);
+  animation:heroReveal 0.6s ease 0.4s both;
+}
+.role-tab{
+  flex:1;padding:9px;
+  border:none;border-radius:10px;
+  background:transparent;
+  color:rgba(255,255,255,0.4);
+  cursor:pointer;font-size:12px;font-weight:600;
+  font-family:'Inter',sans-serif;
+  transition:all 0.3s;
+  letter-spacing:0.3px;
+  position:relative;overflow:hidden;
+}
+.role-tab::before{
+  content:'';
+  position:absolute;inset:0;
+  background:linear-gradient(135deg,var(--c1),var(--c2));
+  opacity:0;border-radius:10px;
+  transition:opacity 0.3s;
+}
+.role-tab:hover{color:rgba(255,255,255,0.8)}
+.role-tab.active{color:#fff}
+.role-tab.active::before{opacity:1}
+.role-tab span{position:relative;z-index:1}
+.role-tab.user{--c1:#4f8ef7;--c2:#06b6d4}
+.role-tab.doctor{--c1:#10b981;--c2:#059669}
+.role-tab.admin{--c1:#f59e0b;--c2:#ef4444}
+
+/* FORM */
+.form-section{animation:heroReveal 0.6s ease 0.5s both}
+.form-group{margin-bottom:18px}
+.form-group label{
+  display:block;font-size:11px;
+  color:rgba(255,255,255,0.4);
+  margin-bottom:8px;
+  text-transform:uppercase;letter-spacing:0.8px;font-weight:600;
+}
+
+.input-wrap{position:relative}
+.input-wrap input{
+  width:100%;padding:13px 16px 13px 44px;
+  background:rgba(255,255,255,0.05);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:12px;
+  color:#fff;font-size:14px;
+  font-family:'Inter',sans-serif;
+  outline:none;
+  transition:all 0.3s;
+}
+.input-wrap input::placeholder{color:rgba(255,255,255,0.25)}
+.input-wrap input:focus{
+  border-color:var(--focus-color, #4f8ef7);
+  background:rgba(255,255,255,0.08);
+  box-shadow:0 0 0 3px var(--focus-glow, rgba(79,142,247,0.15)),
+             0 0 20px var(--focus-glow, rgba(79,142,247,0.1));
+}
+.input-icon{
+  position:absolute;left:14px;top:50%;
+  transform:translateY(-50%);
+  font-size:16px;pointer-events:none;
+  transition:transform 0.3s;
+}
+.input-wrap input:focus ~ .input-icon{
+  transform:translateY(-50%) scale(1.2);
+}
+
+/* SUBMIT BUTTON */
+.submit-btn{
+  width:100%;padding:14px;
+  border:none;border-radius:12px;
+  font-size:15px;font-weight:600;
+  font-family:'Inter',sans-serif;
+  cursor:pointer;
+  color:#fff;
+  position:relative;overflow:hidden;
+  transition:all 0.3s;
+  margin-top:4px;
+  background:linear-gradient(135deg,#4f8ef7,#a855f7);
+  box-shadow:0 6px 25px rgba(79,142,247,0.35);
+}
+.submit-btn::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,transparent,rgba(255,255,255,0.1),transparent);
+  transform:translateX(-100%);
+  transition:transform 0.6s;
+}
+.submit-btn:hover{
+  transform:translateY(-2px);
+  box-shadow:0 10px 35px rgba(79,142,247,0.5);
+}
+.submit-btn:hover::before{transform:translateX(100%)}
+.submit-btn:active{transform:scale(0.98)}
+
+/* RIPPLE */
+.ripple{
+  position:absolute;border-radius:50%;
+  background:rgba(255,255,255,0.3);
+  transform:scale(0);
+  animation:rippleAnim 0.6s linear;
+  pointer-events:none;
+}
+@keyframes rippleAnim{
+  to{transform:scale(4);opacity:0}
+}
+
+.toggle-form{
+  text-align:center;margin-top:20px;
+  font-size:13px;color:rgba(255,255,255,0.35);
+}
+.toggle-form a{
+  color:#4f8ef7;cursor:pointer;
+  text-decoration:none;font-weight:600;
+  transition:color 0.2s;
+}
+.toggle-form a:hover{color:#a855f7}
+
+/* MESSAGES */
+.error-msg{
+  background:rgba(239,68,68,0.12);
+  border:1px solid rgba(239,68,68,0.3);
+  color:#f87171;padding:11px 14px;
+  border-radius:10px;font-size:13px;
+  margin-bottom:14px;display:none;
+  animation:heroReveal 0.3s ease;
+}
+.success-msg{
+  background:rgba(16,185,129,0.12);
+  border:1px solid rgba(16,185,129,0.3);
+  color:#4ade80;padding:11px 14px;
+  border-radius:10px;font-size:13px;
+  margin-bottom:14px;display:none;
+  animation:heroReveal 0.3s ease;
+}
+
+/* DEMO CREDS */
+.demo-creds{
+  margin-top:20px;
+  background:rgba(255,255,255,0.03);
+  border:1px solid rgba(255,255,255,0.06);
+  border-radius:12px;padding:14px;
+  font-size:12px;color:rgba(255,255,255,0.35);
+  line-height:1.8;
+  animation:heroReveal 0.6s ease 0.7s both;
+}
+.demo-creds strong{
+  color:#4f8ef7;display:block;
+  margin-bottom:6px;font-size:11px;
+  text-transform:uppercase;letter-spacing:1px;
+}
+
+/* CARD FLIP */
+.flip-container{perspective:1000px}
+.flipper{
+  transition:transform 0.6s cubic-bezier(0.4,0,0.2,1);
+  transform-style:preserve-3d;
+  position:relative;min-height:320px;
+}
+.flipper.flipped{transform:rotateY(180deg)}
+.flip-front,.flip-back{
+  backface-visibility:hidden;
+  -webkit-backface-visibility:hidden;
+  position:absolute;width:100%;
+}
+.flip-back{transform:rotateY(180deg)}
+
+#registerForm{display:none}
+
+/* LOADING SPINNER ON BUTTON */
+.btn-loading{
+  display:none;
+  width:18px;height:18px;
+  border:2px solid rgba(255,255,255,0.3);
+  border-top-color:#fff;
+  border-radius:50%;
+  animation:spin 0.6s linear infinite;
+  margin:0 auto;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+@media(max-width:700px){.login-left{display:none}.login-right{width:100%}}
+</style>
+</head>
+<body>
+
+<div class="bg-animate"></div>
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+<div class="orb orb3"></div>
+<div class="orb orb4"></div>
+<canvas id="canvas"></canvas>
+
+<div class="login-wrapper">
+  <!-- LEFT -->
+  <div class="login-left">
+    <div class="logo-wrap">
+      <div class="logo-icon">+</div>
+      <div>
+        <div class="logo-text">HealthAI Pro</div>
+        <div class="logo-sub">INTELLIGENT MEDICAL PLATFORM</div>
+      </div>
+    </div>
+    <div class="hero-title">Healthcare powered by Artificial Intelligence</div>
+    <div class="hero-sub">Get instant AI-powered diagnosis, book appointments with top specialists, manage prescriptions and your complete health history — all secured in one platform.</div>
+    <div class="feature-list">
+      <div class="feature-item"><div class="feature-dot" style="background:#4f8ef7"></div>AI symptom diagnosis with 94.2% accuracy</div>
+      <div class="feature-item"><div class="feature-dot" style="background:#a855f7"></div>Book appointments with verified specialists</div>
+      <div class="feature-item"><div class="feature-dot" style="background:#10b981"></div>Medicine store with home delivery</div>
+      <div class="feature-item"><div class="feature-dot" style="background:#f59e0b"></div>Secure encrypted health records</div>
+      <div class="feature-item"><div class="feature-dot" style="background:#e91e63"></div>Doctor & Admin role dashboards</div>
+      <div class="feature-item"><div class="feature-dot" style="background:#06b6d4"></div>Real-time chat with your doctor</div>
+    </div>
+  </div>
+
+  <!-- RIGHT -->
+  <div class="login-right">
+    <div class="form-title" id="formTitle">Welcome back</div>
+    <div class="form-sub" id="formSub">Sign in to your HealthAI account</div>
+
+    <div class="role-tabs">
+      <button class="role-tab user active" onclick="setRole('user',this)"><span>🙍 Patient</span></button>
+      <button class="role-tab doctor" onclick="setRole('doctor',this)"><span>👨‍⚕️ Doctor</span></button>
+      <button class="role-tab admin" onclick="setRole('admin',this)"><span>⚙️ Admin</span></button>
+    </div>
+
+    <div id="errorMsg" class="error-msg"></div>
+    <div id="successMsg" class="success-msg"></div>
+
+    <!-- LOGIN FORM -->
+    <div id="loginForm" class="form-section">
+      <div class="form-group">
+        <label>Email Address</label>
+        <div class="input-wrap">
+          <input type="email" id="loginEmail" placeholder="you@example.com" autocomplete="email">
+          <span class="input-icon">✉</span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <div class="input-wrap">
+          <input type="password" id="loginPassword" placeholder="Enter your password" onkeypress="if(event.key==='Enter')doLogin()">
+          <span class="input-icon">🔒</span>
+        </div>
+      </div>
+      <button class="submit-btn" id="loginBtn" onclick="handleRipple(event);doLogin()">
+        <span id="loginBtnText">Sign In →</span>
+        <div class="btn-loading" id="loginLoading"></div>
+      </button>
+      <div class="toggle-form">Don't have an account? <a onclick="toggleForm(true)">Create one free</a></div>
+    </div>
+
+    <!-- REGISTER FORM -->
+    <div id="registerForm" class="form-section">
+      <div class="form-group">
+        <label>Full Name</label>
+        <div class="input-wrap">
+          <input type="text" id="regName" placeholder="Your full name">
+          <span class="input-icon">👤</span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Email Address</label>
+        <div class="input-wrap">
+          <input type="email" id="regEmail" placeholder="you@example.com">
+          <span class="input-icon">✉</span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <div class="input-wrap">
+          <input type="password" id="regPassword" placeholder="Min 6 characters">
+          <span class="input-icon">🔒</span>
+        </div>
+      </div>
+      <button class="submit-btn" id="regBtn" style="background:linear-gradient(135deg,#10b981,#059669);box-shadow:0 6px 25px rgba(16,185,129,0.35)" onclick="handleRipple(event);doRegister()">
+        <span id="regBtnText">Create Account →</span>
+        <div class="btn-loading" id="regLoading"></div>
+      </button>
+      <div class="toggle-form">Already have an account? <a onclick="toggleForm(false)">Sign in</a></div>
+    </div>
+
+    <div class="demo-creds">
+      <strong>Demo Accounts</strong>
+      Patient: user@healthai.com / user123<br>
+      Doctor: priya@healthai.com / doctor123<br>
+      Admin: admin@healthai.com / admin123<br>
+      Dev: dev@healthai.com / dev123secure
+    </div>
+  </div>
+</div>
+
+<script>
+let currentRole = 'user';
+
+// PARTICLES
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+let W = canvas.width = window.innerWidth;
+let H = canvas.height = window.innerHeight;
+window.addEventListener('resize',()=>{W=canvas.width=window.innerWidth;H=canvas.height=window.innerHeight;});
+
+const particles = Array.from({length:90},()=>({
+  x:Math.random()*W, y:Math.random()*H,
+  vx:(Math.random()-0.5)*0.5, vy:(Math.random()-0.5)*0.5,
+  r:Math.random()*2+0.5,
+  a:Math.random()*0.5+0.1,
+  color:`hsl(${Math.random()*60+200},80%,70%)`
+}));
+
+function drawParticles(){
+  ctx.clearRect(0,0,W,H);
+  particles.forEach(p=>{
+    p.x+=p.vx; p.y+=p.vy;
+    if(p.x<0||p.x>W)p.vx*=-1;
+    if(p.y<0||p.y>H)p.vy*=-1;
+    ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    ctx.fillStyle=p.color;ctx.globalAlpha=p.a;ctx.fill();
+  });
+  // Connect nearby particles
+  ctx.globalAlpha=1;
+  for(let i=0;i<particles.length;i++){
+    for(let j=i+1;j<particles.length;j++){
+      const d=Math.hypot(particles[i].x-particles[j].x,particles[i].y-particles[j].y);
+      if(d<100){
+        ctx.beginPath();
+        ctx.moveTo(particles[i].x,particles[i].y);
+        ctx.lineTo(particles[j].x,particles[j].y);
+        ctx.strokeStyle=`rgba(79,142,247,${0.1*(1-d/100)})`;
+        ctx.lineWidth=0.5;ctx.stroke();
+      }
+    }
+  }
+  requestAnimationFrame(drawParticles);
+}
+drawParticles();
+
+// ROLE
+function setRole(role,el){
+  currentRole=role;
+  document.querySelectorAll('.role-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  const colors={
+    user:'rgba(79,142,247,0.15)',
+    doctor:'rgba(16,185,129,0.15)',
+    admin:'rgba(245,158,11,0.15)'
+  };
+  const focus={
+    user:['#4f8ef7','rgba(79,142,247,0.15)'],
+    doctor:['#10b981','rgba(16,185,129,0.15)'],
+    admin:['#f59e0b','rgba(245,158,11,0.15)']
+  };
+  document.querySelectorAll('.input-wrap input').forEach(inp=>{
+    inp.style.setProperty('--focus-color',focus[role][0]);
+    inp.style.setProperty('--focus-glow',focus[role][1]);
+  });
+  const gradients={
+    user:'linear-gradient(135deg,#4f8ef7,#a855f7)',
+    doctor:'linear-gradient(135deg,#10b981,#059669)',
+    admin:'linear-gradient(135deg,#f59e0b,#ef4444)'
+  };
+  document.getElementById('loginBtn').style.background=gradients[role];
+}
+
+// FORM TOGGLE WITH FLIP
+function toggleForm(showReg){
+  const lf=document.getElementById('loginForm');
+  const rf=document.getElementById('registerForm');
+  if(showReg){
+    lf.style.animation='flipOut 0.3s ease forwards';
+    setTimeout(()=>{
+      lf.style.display='none';
+      rf.style.display='block';
+      rf.style.animation='flipIn 0.3s ease forwards';
+    },300);
+    document.getElementById('formTitle').textContent='Create account';
+    document.getElementById('formSub').textContent='Join HealthAI Pro for free';
+  } else {
+    rf.style.animation='flipOut 0.3s ease forwards';
+    setTimeout(()=>{
+      rf.style.display='none';
+      lf.style.display='block';
+      lf.style.animation='flipIn 0.3s ease forwards';
+    },300);
+    document.getElementById('formTitle').textContent='Welcome back';
+    document.getElementById('formSub').textContent='Sign in to your HealthAI account';
+  }
+  hideMessages();
+}
+
+// Add flip keyframes dynamically
+const style=document.createElement('style');
+style.textContent=`
+@keyframes flipOut{from{opacity:1;transform:rotateY(0) translateY(0)}to{opacity:0;transform:rotateY(-90deg) translateY(10px)}}
+@keyframes flipIn{from{opacity:0;transform:rotateY(90deg) translateY(10px)}to{opacity:1;transform:rotateY(0) translateY(0)}}
+`;
+document.head.appendChild(style);
+
+// RIPPLE
+function handleRipple(e){
+  const btn=e.currentTarget;
+  const r=document.createElement('span');
+  const d=Math.max(btn.offsetWidth,btn.offsetHeight);
+  const rect=btn.getBoundingClientRect();
+  r.className='ripple';
+  r.style.cssText=`width:${d}px;height:${d}px;left:${e.clientX-rect.left-d/2}px;top:${e.clientY-rect.top-d/2}px`;
+  btn.appendChild(r);
+  setTimeout(()=>r.remove(),600);
+}
+
+function showError(msg){
+  const el=document.getElementById('errorMsg');
+  el.textContent=msg;el.style.display='block';
+  document.getElementById('successMsg').style.display='none';
+}
+function showSuccess(msg){
+  const el=document.getElementById('successMsg');
+  el.textContent=msg;el.style.display='block';
+  document.getElementById('errorMsg').style.display='none';
+}
+function hideMessages(){
+  document.getElementById('errorMsg').style.display='none';
+  document.getElementById('successMsg').style.display='none';
+}
+
+// LOGIN
+async function doLogin(){
+  const email=document.getElementById('loginEmail').value.trim();
+  const password=document.getElementById('loginPassword').value;
+  if(!email||!password){showError('Please fill in all fields.');return;}
+  const btn=document.getElementById('loginBtn');
+  const txt=document.getElementById('loginBtnText');
+  const load=document.getElementById('loginLoading');
+  txt.style.display='none';load.style.display='block';btn.disabled=true;
+  try{
+    const res=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password})});
+    const data=await res.json();
+    if(res.ok){
+      showSuccess('Login successful! Redirecting...');
+      setTimeout(()=>window.location.href=data.redirect,700);
+    } else showError(data.error||'Login failed.');
+  } catch{showError('Cannot connect to server.');}
+  txt.style.display='block';load.style.display='none';btn.disabled=false;
+}
+
+// REGISTER
+async function doRegister(){
+  const name=document.getElementById('regName').value.trim();
+  const email=document.getElementById('regEmail').value.trim();
+  const password=document.getElementById('regPassword').value;
+  if(!name||!email||!password){showError('Please fill all fields.');return;}
+  if(password.length<6){showError('Password must be at least 6 characters.');return;}
+  const btn=document.getElementById('regBtn');
+  const txt=document.getElementById('regBtnText');
+  const load=document.getElementById('regLoading');
+  txt.style.display='none';load.style.display='block';btn.disabled=true;
+  try{
+    const res=await fetch('/api/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,email,password,role:currentRole})});
+    const data=await res.json();
+    if(res.ok){showSuccess('Account created! Please sign in.');setTimeout(()=>toggleForm(false),1200);}
+    else showError(data.error||'Registration failed.');
+  } catch{showError('Cannot connect to server.');}
+  txt.style.display='block';load.style.display='none';btn.disabled=false;
+}
+</script>
+</body>
+</html>

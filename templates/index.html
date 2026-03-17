@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HealthAI Pro — Dashboard</title>
+<link rel="stylesheet" href="/static/style.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+</head>
+<body>
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-icon">+</div>
+    <div><div class="brand-name">HealthAI Pro</div><div class="brand-sub">Medical Platform</div></div>
+  </div>
+  <nav class="sidebar-nav">
+    <a class="nav-item active" onclick="switchTab('home',this)"><span class="nav-icon">⌂</span>Home</a>
+    <a class="nav-item" onclick="switchTab('chat',this)"><span class="nav-icon">◎</span>AI Chatbot</a>
+    <a class="nav-item" onclick="switchTab('checker',this)"><span class="nav-icon">✦</span>Symptom Checker</a>
+    <a class="nav-item" onclick="switchTab('appointments',this)"><span class="nav-icon">◷</span>Appointments</a>
+    <a class="nav-item" onclick="switchTab('store',this)"><span class="nav-icon">⊞</span>Medicine Store</a>
+    <a class="nav-item" onclick="switchTab('dashboard',this)"><span class="nav-icon">▣</span>Dashboard</a>
+    <a class="nav-item" onclick="switchTab('records',this)"><span class="nav-icon">≡</span>My Records</a>
+    <a class="nav-item" onclick="switchTab('vision',this)"><span class="nav-icon">◈</span>Skin Analysis</a>
+    <a class="nav-item" onclick="switchTab('bmi',this)"><span class="nav-icon">⚖</span>BMI Calculator</a>
+    <a class="nav-item" onclick="switchTab('news',this)"><span class="nav-icon">📰</span>Health News</a>
+    <a class="nav-item" onclick="switchTab('donors',this)"><span class="nav-icon">🩸</span>Blood Donors</a>
+    <a class="nav-item" onclick="switchTab('profile',this)"><span class="nav-icon">◈</span>My Profile</a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-card" id="sidebarUser"></div>
+    <button class="logout-btn" onclick="doLogout()">Sign Out</button>
+  </div>
+</div>
+
+<div class="main-content">
+  <div class="topbar">
+    <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+    <div class="topbar-title" id="topbarTitle">Home</div>
+    <div class="topbar-actions">
+
+      <button class="theme-btn" id="themeBtn" onclick="toggleTheme()">🌙</button>
+      <div class="notif-btn" onclick="toggleNotifPanel()">🔔<span class="notif-dot"></span></div>
+      <div class="notif-panel hidden" id="notifPanel"></div>
+      <div class="avatar-btn" id="topAvatar"></div>
+    </div>
+  </div>
+
+  <!-- HOME -->
+  <div id="tab-home" class="tab-content active">
+    <div class="welcome-banner" id="welcomeBanner"></div>
+    <div class="quick-stats" id="quickStats"></div>
+    <div class="home-grid">
+      <div class="quick-card" onclick="switchTab('checker',null)">
+        <div class="qc-icon" style="background:linear-gradient(135deg,#4f8ef7,#06b6d4)">✦</div>
+        <div class="qc-title">Symptom Check</div>
+        <div class="qc-sub">AI-powered diagnosis</div>
+      </div>
+      <div class="quick-card" onclick="switchTab('appointments',null)">
+        <div class="qc-icon" style="background:linear-gradient(135deg,#10b981,#059669)">◷</div>
+        <div class="qc-title">Book Appointment</div>
+        <div class="qc-sub">6 specialists available</div>
+      </div>
+      <div class="quick-card" onclick="switchTab('store',null)">
+        <div class="qc-icon" style="background:linear-gradient(135deg,#f59e0b,#ef4444)">⊞</div>
+        <div class="qc-title">Medicine Store</div>
+        <div class="qc-sub">12 products available</div>
+      </div>
+      <div class="quick-card" onclick="switchTab('vision',null)">
+        <div class="qc-icon" style="background:linear-gradient(135deg,#a855f7,#ec4899)">◈</div>
+        <div class="qc-title">Skin Analysis</div>
+        <div class="qc-sub">Computer vision AI</div>
+      </div>
+    </div>
+    <div class="home-bottom">
+      <div class="health-tips-card">
+        <h3>Health Tips</h3>
+        <div class="tips-list" id="tipsList"></div>
+      </div>
+      <div class="mini-chart-card">
+        <h3>This month's trend</h3>
+        <canvas id="miniChart" height="160"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHAT -->
+  <div id="tab-chat" class="tab-content">
+    <div class="chat-container">
+      <div class="chat-header">
+        <div class="chat-avatar-big">AI</div>
+        <div><div class="chat-bot-name">MedBot</div><div class="chat-bot-status">Online · Powered by NLP</div></div>
+      </div>
+      <div class="chat-messages" id="chatMessages">
+        <div class="message bot-message"><div class="message-avatar">AI</div><div class="message-bubble">Hello! I am MedBot, your AI health assistant. Describe your symptoms and I will help analyze them or guide you to the right specialist!</div></div>
+      </div>
+      <div class="typing-indicator" id="typingIndicator" style="display:none">
+        <div class="message bot-message"><div class="message-avatar">AI</div><div class="message-bubble"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div></div>
+      </div>
+      <div class="chat-input-area">
+        <input type="text" id="chatInput" placeholder="Type symptoms or ask a health question..." onkeypress="handleChatKey(event)">
+        <button class="send-btn" onclick="sendMessage()">➤</button>
+      </div>
+      <div class="quick-prompts">
+        <button onclick="quickPrompt('I have fever and cough')">Fever & Cough</button>
+        <button onclick="quickPrompt('I have a severe headache')">Headache</button>
+        <button onclick="quickPrompt('I feel very tired')">Fatigue</button>
+        <button onclick="quickPrompt('How to book a doctor?')">Book Doctor</button>
+        <button onclick="quickPrompt('I need medicine')">Medicine</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SYMPTOM CHECKER -->
+  <div id="tab-checker" class="tab-content">
+    <div class="section-header"><h2>AI Symptom Checker</h2><p>Select all symptoms you are experiencing for an ML-powered diagnosis</p></div>
+    <div class="symptoms-grid">
+      <label class="symptom-card"><input type="checkbox" id="fever"><span class="checkmark"></span><span class="sym-emoji">🌡️</span><span class="symptom-name">Fever</span></label>
+      <label class="symptom-card"><input type="checkbox" id="cough"><span class="checkmark"></span><span class="sym-emoji">😷</span><span class="symptom-name">Cough</span></label>
+      <label class="symptom-card"><input type="checkbox" id="headache"><span class="checkmark"></span><span class="sym-emoji">🤕</span><span class="symptom-name">Headache</span></label>
+      <label class="symptom-card"><input type="checkbox" id="fatigue"><span class="checkmark"></span><span class="sym-emoji">😴</span><span class="symptom-name">Fatigue</span></label>
+      <label class="symptom-card"><input type="checkbox" id="sore_throat"><span class="checkmark"></span><span class="sym-emoji">🔴</span><span class="symptom-name">Sore Throat</span></label>
+      <label class="symptom-card"><input type="checkbox" id="body_ache"><span class="checkmark"></span><span class="sym-emoji">💪</span><span class="symptom-name">Body Ache</span></label>
+      <label class="symptom-card"><input type="checkbox" id="nausea"><span class="checkmark"></span><span class="sym-emoji">🤢</span><span class="symptom-name">Nausea</span></label>
+      <label class="symptom-card"><input type="checkbox" id="runny_nose"><span class="checkmark"></span><span class="sym-emoji">🤧</span><span class="symptom-name">Runny Nose</span></label>
+    </div>
+    <button class="primary-btn pulse-btn" onclick="analyzeSymptoms()">Analyze with AI</button>
+    <div id="result-container" class="result-container hidden"></div>
+  </div>
+
+  <!-- APPOINTMENTS -->
+  <div id="tab-appointments" class="tab-content">
+    <div class="section-header"><h2>Book an Appointment</h2><p>Choose from our verified specialists</p></div>
+    <div class="doctors-grid" id="doctorsGrid"></div>
+    <div id="bookingForm" class="booking-form hidden">
+      <h3 id="bookingTitle">Book Appointment</h3>
+      <div class="booking-fields">
+        <div class="form-group"><label>Date</label><input type="date" id="apptDate"></div>
+        <div class="form-group"><label>Time Slot</label><select id="apptTime"></select></div>
+        <div class="form-group"><label>Reason for visit</label><input type="text" id="apptReason" placeholder="Brief description"></div>
+      </div>
+      <div style="display:flex;gap:12px;margin-top:16px">
+        <button class="primary-btn" onclick="confirmBooking()">Confirm Booking</button>
+        <button class="secondary-btn" onclick="document.getElementById('bookingForm').classList.add('hidden')">Cancel</button>
+      </div>
+      <div id="bookingMsg" class="booking-msg hidden"></div>
+    </div>
+    <div class="my-appointments" id="myAppointments"></div>
+  </div>
+
+  <!-- STORE -->
+  <div id="tab-store" class="tab-content">
+    <div class="store-header">
+      <div class="section-header"><h2>Medicine Store</h2><p>Genuine medicines delivered to your door</p></div>
+      <div class="store-controls">
+        <input type="text" id="storeSearch" placeholder="Search medicines..." oninput="filterStore()">
+        <select id="categoryFilter" onchange="filterStore()">
+          <option value="all">All Categories</option>
+          <option value="Pain Relief">Pain Relief</option>
+          <option value="Allergy">Allergy</option>
+          <option value="Antibiotic">Antibiotic</option>
+          <option value="Supplement">Supplement</option>
+          <option value="Gastric">Gastric</option>
+          <option value="Cardiac">Cardiac</option>
+          <option value="Diabetes">Diabetes</option>
+          <option value="Respiratory">Respiratory</option>
+          <option value="Eye Care">Eye Care</option>
+        </select>
+      </div>
+    </div>
+    <div class="medicines-grid" id="medicinesGrid"></div>
+    <div class="cart-bar" id="cartBar" style="display:none">
+      <div class="cart-info">🛒 <span id="cartCount">0</span> items · ₹<span id="cartTotal">0</span></div>
+      <button class="checkout-btn" onclick="checkout()">Checkout →</button>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="tab-dashboard" class="tab-content">
+    <div class="section-header"><h2>Analytics Dashboard</h2><p>Real-time health insights and trends</p></div>
+    <div class="stats-row" id="dashStats"></div>
+    <div class="charts-grid">
+      <div class="chart-card"><h3>Symptom Frequency</h3><canvas id="symptomChart"></canvas></div>
+      <div class="chart-card"><h3>Disease Distribution</h3><canvas id="diseaseChart"></canvas></div>
+      <div class="chart-card"><h3>Age Group Analysis</h3><canvas id="ageChart"></canvas></div>
+      <div class="chart-card"><h3>Recovery Rate (%)</h3><canvas id="recoveryChart"></canvas></div>
+      <div class="chart-card full-width"><h3>Monthly Cases Trend</h3><canvas id="trendChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- RECORDS -->
+  <div id="tab-records" class="tab-content">
+    <div class="section-header"><h2>My Health Records</h2><p>Your past diagnoses and analyses</p></div>
+    <div id="recordsList" class="records-list"></div>
+  </div>
+
+  <!-- SKIN VISION -->
+  <div id="tab-vision" class="tab-content">
+    <div class="section-header"><h2>Skin Condition Analysis</h2><p>AI-powered computer vision analysis</p></div>
+    <div class="vision-upload" id="uploadArea" onclick="document.getElementById('imageInput').click()">
+      <div class="upload-pulse"></div>
+      <div class="upload-text">
+        <div style="font-size:40px;margin-bottom:12px">📸</div>
+        <div style="font-size:16px;font-weight:600;margin-bottom:6px">Upload Skin Image</div>
+        <div style="font-size:13px;color:#8892b0">Click or drag & drop · JPG/PNG · Max 5MB</div>
+      </div>
+      <input type="file" id="imageInput" accept="image/*" style="display:none" onchange="analyzeImage(event)">
+    </div>
+    <div id="imagePreview" class="image-preview-box hidden"></div>
+    <div id="visionResult" class="vision-result-card hidden"></div>
+    <p class="disclaimer">⚠ For demonstration only. Not a substitute for professional medical diagnosis.</p>
+  </div>
+
+  <!-- BMI CALCULATOR -->
+<div id="tab-bmi" class="tab-content">
+  <div class="section-header"><h2>BMI Calculator</h2><p>Check your Body Mass Index instantly</p></div>
+  <div class="bmi-card">
+    <div class="booking-fields">
+      <div class="form-group">
+        <label>Weight (kg)</label>
+        <input type="number" id="bmiWeight" placeholder="e.g. 70" min="1" max="300">
+      </div>
+      <div class="form-group">
+        <label>Height (cm)</label>
+        <input type="number" id="bmiHeight" placeholder="e.g. 175" min="50" max="250">
+      </div>
+    </div>
+    <button class="primary-btn" style="margin-top:18px;width:100%" onclick="calculateBMI()">Calculate BMI</button>
+    <div class="bmi-result hidden" id="bmiResult" style="margin-top:20px;padding:24px;border-radius:var(--radius);text-align:center"></div>
+  </div>
+</div>
+
+<!-- HEALTH NEWS -->
+<div id="tab-news" class="tab-content">
+  <div class="section-header"><h2>Health News</h2><p>Latest medical research and health updates</p></div>
+  <div id="newsFeed"></div>
+</div>
+
+<!-- BLOOD DONORS -->
+<div id="tab-donors" class="tab-content">
+  <div class="section-header"><h2>Blood Donor Finder</h2><p>Find donors by blood group in your area</p></div>
+  <div style="display:flex;gap:12px;margin-bottom:20px;align-items:center">
+    <select id="donorBloodGroup" style="padding:11px 16px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-size:14px;outline:none">
+      <option value="">All Blood Groups</option>
+      <option>A+</option><option>A-</option>
+      <option>B+</option><option>B-</option>
+      <option>AB+</option><option>AB-</option>
+      <option>O+</option><option>O-</option>
+    </select>
+    <button class="primary-btn" style="background:linear-gradient(135deg,#ef4444,#dc2626)" onclick="findDonors()">Find Donors</button>
+  </div>
+  <div id="donorsList"></div>
+</div>
+
+<!-- PROFILE -->
+<div id="tab-profile" class="tab-content">
+  <div class="section-header"><h2>My Profile</h2><p>Manage your health profile and settings</p></div>
+  <div class="profile-card" id="profileCard">
+    <div style="display:flex;align-items:center;gap:20px;margin-bottom:28px;flex-wrap:wrap">
+      <div id="profileAvatar" style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--purple));display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:700;color:#fff;box-shadow:0 0 30px rgba(79,142,247,0.4);flex-shrink:0"></div>
+      <div>
+        <div style="font-size:22px;font-weight:700" id="profileName">Loading...</div>
+        <div style="color:var(--blue);font-size:14px" id="profileEmail"></div>
+        <div style="font-size:13px;color:var(--muted);margin-top:4px" id="profileJoined"></div>
+      </div>
+      <button class="primary-btn" style="margin-left:auto" onclick="generateReport()">⬇ Download Report</button>
+    </div>
+    <div class="booking-fields">
+      <div class="form-group"><label>Full Name</label><input type="text" id="pName"></div>
+      <div class="form-group"><label>Phone</label><input type="text" id="pPhone"></div>
+      <div class="form-group"><label>Age</label><input type="number" id="pAge"></div>
+      <div class="form-group"><label>Blood Group</label>
+        <select id="pBlood">
+          <option value="">Select</option>
+          <option>A+</option><option>A-</option><option>B+</option><option>B-</option>
+          <option>AB+</option><option>AB-</option><option>O+</option><option>O-</option>
+        </select>
+      </div>
+      <div class="form-group" style="grid-column:1/-1"><label>Address</label><input type="text" id="pAddress"></div>
+      <div class="form-group" style="grid-column:1/-1"><label>Bio / Medical Notes</label>
+        <textarea id="pBio" rows="3" style="width:100%;padding:11px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-size:14px;font-family:'Inter',sans-serif;outline:none;resize:vertical"></textarea>
+      </div>
+    </div>
+    <button class="primary-btn" style="margin-top:20px" onclick="saveProfile()">Save Profile</button>
+  </div>
+ </div>
+
+<div id="toastContainer" style="position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px"></div>
+<script src="/static/app.js"></script>
+</body>
+</html>

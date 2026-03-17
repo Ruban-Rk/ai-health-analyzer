@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HealthAI — Admin Control Panel</title>
+<link rel="stylesheet" href="/static/style.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+</head>
+<body>
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-icon" style="background:linear-gradient(135deg,#f59e0b,#ef4444)">★</div>
+    <div><div class="brand-name">Admin Panel</div><div class="brand-sub">Full Control</div></div>
+  </div>
+  <nav class="sidebar-nav">
+    <a class="nav-item active" onclick="switchTab('home',this)"><span class="nav-icon">⌂</span>Overview</a>
+    <a class="nav-item" onclick="switchTab('users',this)"><span class="nav-icon">♟</span>Users</a>
+    <a class="nav-item" onclick="switchTab('appointments',this)"><span class="nav-icon">◷</span>Appointments</a>
+    <a class="nav-item" onclick="switchTab('orders',this)"><span class="nav-icon">⊞</span>Orders</a>
+    <a class="nav-item" onclick="switchTab('medicines',this)"><span class="nav-icon">+</span>Medicines</a>
+    <a class="nav-item" onclick="switchTab('messages',this)"><span class="nav-icon">◎</span>Messages</a>
+    <a class="nav-item" onclick="switchTab('analytics',this)"><span class="nav-icon">▣</span>Analytics</a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-card" id="sidebarUser"></div>
+    <button class="logout-btn" onclick="doLogout()">Sign Out</button>
+  </div>
+</div>
+
+<div class="main-content">
+  <div class="topbar">
+    <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+    <div class="topbar-title" id="topbarTitle">Admin Overview</div>
+    <div class="topbar-actions">
+      <div class="notif-btn">🔔<span class="notif-dot"></span></div>
+      <div class="avatar-btn" id="topAvatar" style="background:linear-gradient(135deg,#f59e0b,#ef4444)"></div>
+    </div>
+  </div>
+
+  <!-- OVERVIEW -->
+  <div id="tab-home" class="tab-content active">
+    <div class="welcome-banner" style="background:linear-gradient(135deg,#3d1a00,#1a0e00)">
+      <div style="font-size:13px;color:#f59e0b;margin-bottom:6px">Admin Control Panel</div>
+      <div style="font-size:26px;font-weight:800;margin-bottom:6px;background:linear-gradient(135deg,#fff,#f59e0b);-webkit-background-clip:text;-webkit-text-fill-color:transparent" id="adminGreet">Loading...</div>
+      <div style="font-size:14px;color:#8892b0">You have full authority over all users, data and system settings</div>
+    </div>
+    <div class="quick-stats" id="adminStats"></div>
+    <div class="charts-grid" style="margin-top:20px">
+      <div class="chart-card"><h3>User distribution</h3><canvas id="userChart"></canvas></div>
+      <div class="chart-card"><h3>Revenue breakdown</h3><canvas id="revChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- USERS -->
+  <div id="tab-users" class="tab-content">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:12px">
+      <div class="section-header" style="margin:0"><h2>User Management</h2><p>Full control over all accounts</p></div>
+      <div style="display:flex;gap:10px">
+        <input type="text" id="userSearch" placeholder="Search users..." oninput="filterUsers()" style="padding:10px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:13px;outline:none">
+        <select id="roleFilter" onchange="filterUsers()" style="padding:10px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:13px;outline:none">
+          <option value="all">All Roles</option>
+          <option value="user">Patients</option>
+          <option value="doctor">Doctors</option>
+          <option value="admin">Admins</option>
+          <option value="developer">Developers</option>
+        </select>
+      </div>
+    </div>
+    <div id="usersList"></div>
+  </div>
+
+  <!-- APPOINTMENTS -->
+  <div id="tab-appointments" class="tab-content">
+    <div class="section-header"><h2>All Appointments</h2><p>System-wide appointment management</p></div>
+    <div id="allApptsList"></div>
+  </div>
+
+  <!-- ORDERS -->
+  <div id="tab-orders" class="tab-content">
+    <div class="section-header"><h2>All Orders</h2><p>Medicine store order management</p></div>
+    <div id="allOrdersList"></div>
+  </div>
+
+  <!-- MEDICINES -->
+  <div id="tab-medicines" class="tab-content">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+      <div class="section-header" style="margin:0"><h2>Medicine Store Management</h2><p>Add, edit or remove medicines</p></div>
+      <button class="primary-btn" style="background:linear-gradient(135deg,#f59e0b,#ef4444)" onclick="showAddMedicine()">+ Add Medicine</button>
+    </div>
+    <div id="addMedForm" class="booking-form hidden" style="margin-bottom:20px">
+      <h3 style="margin-bottom:16px">Add New Medicine</h3>
+      <div class="booking-fields">
+        <div class="form-group"><label>Name</label><input type="text" id="medName" placeholder="Medicine name"></div>
+        <div class="form-group"><label>Category</label>
+          <select id="medCat" style="width:100%;padding:11px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;outline:none">
+            <option>Pain Relief</option><option>Allergy</option><option>Antibiotic</option>
+            <option>Supplement</option><option>Gastric</option><option>Cardiac</option>
+            <option>Diabetes</option><option>Respiratory</option><option>Eye Care</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Price (₹)</label><input type="number" id="medPrice" placeholder="0"></div>
+        <div class="form-group"><label>Stock</label><input type="number" id="medStock" placeholder="0"></div>
+        <div class="form-group"><label>Emoji</label><input type="text" id="medEmoji" placeholder="💊" value="💊"></div>
+        <div class="form-group"><label>Description</label><input type="text" id="medDesc" placeholder="Short description"></div>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:14px">
+        <button class="primary-btn" style="background:linear-gradient(135deg,#f59e0b,#ef4444)" onclick="addMedicine()">Add Medicine</button>
+        <button class="secondary-btn" onclick="document.getElementById('addMedForm').classList.add('hidden')">Cancel</button>
+      </div>
+    </div>
+    <div id="medicinesList"></div>
+  </div>
+
+  <!-- MESSAGES -->
+  <div id="tab-messages" class="tab-content">
+    <div class="section-header"><h2>Messages</h2><p>Chat with users, doctors and sub-admins</p></div>
+    <div class="messages-layout">
+      <div class="contacts-panel" id="adminContactsPanel"></div>
+      <div class="chat-panel" id="adminChatPanel">
+        <div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted);font-size:14px">Select a contact to start chatting</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ANALYTICS -->
+  <div id="tab-analytics" class="tab-content">
+    <div class="section-header"><h2>System Analytics</h2><p>Complete platform performance overview</p></div>
+    <div id="analyticsStats" class="quick-stats"></div>
+    <div class="charts-grid" style="margin-top:20px">
+      <div class="chart-card"><h3>Symptom frequency</h3><canvas id="aSymptomChart"></canvas></div>
+      <div class="chart-card"><h3>Disease distribution</h3><canvas id="aDiseaseChart"></canvas></div>
+      <div class="chart-card full-width"><h3>Monthly trend</h3><canvas id="aTrendChart"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<div id="toastContainer" style="position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px"></div>
+<script>
+let currentUser=null, allUsers=[], currentChat=null, chatPollInterval=null;
+
+async function init(){
+  const res=await fetch('/api/current-user');
+  if(!res.ok){window.location.href='/login';return;}
+  currentUser=await res.json();
+  document.getElementById('topAvatar').textContent=currentUser.avatar;
+  document.getElementById('sidebarUser').innerHTML=`<div style="font-size:13px;font-weight:600">${currentUser.name}</div><div style="font-size:11px;color:#f59e0b">Administrator</div>`;
+  loadOverview();
+}
+
+async function loadOverview(){
+  document.getElementById('adminGreet').textContent=currentUser.name;
+  const res=await fetch('/api/admin/analytics');
+  const d=await res.json();
+  document.getElementById('adminStats').innerHTML=`
+    <div class="qs-card"><div class="qs-num" style="color:#f59e0b">${d.total_users}</div><div class="qs-label">Total Users</div></div>
+    <div class="qs-card"><div class="qs-num" style="color:#10b981">${d.total_doctors}</div><div class="qs-label">Doctors</div></div>
+    <div class="qs-card"><div class="qs-num" style="color:#4f8ef7">${d.total_appointments}</div><div class="qs-label">Appointments</div></div>
+    <div class="qs-card"><div class="qs-num" style="color:#a855f7">₹${d.total_revenue}</div><div class="qs-label">Total Revenue</div></div>
+    <div class="qs-card"><div class="qs-num" style="color:#ef4444">${d.banned_users}</div><div class="qs-label">Banned Users</div></div>
+    <div class="qs-card"><div class="qs-num" style="color:#06b6d4">${d.total_orders}</div><div class="qs-label">Orders</div></div>
+    <div class="qs-card"><div class="qs-num" style="color:#ec4899">₹${d.appointment_revenue}</div><div class="qs-label">Consult Revenue</div></div>
+    <div class="qs-card"><div class="qs-num" style="color:#f59e0b">${d.pending_appointments}</div><div class="qs-label">Pending Appts</div></div>
+  `;
+  new Chart(document.getElementById('userChart'),{type:'doughnut',data:{labels:['Patients','Doctors','Admins','Developers'],datasets:[{data:[d.total_users-d.total_doctors-2,d.total_doctors,1,1],backgroundColor:['#4f8ef7','#10b981','#f59e0b','#a855f7'],borderWidth:0}]},options:{plugins:{legend:{labels:{color:'#8892b0'}}}}});
+  new Chart(document.getElementById('revChart'),{type:'bar',data:{labels:['Store Revenue','Consultation'],datasets:[{data:[d.total_revenue,d.appointment_revenue],backgroundColor:['#f59e0b','#10b981'],borderRadius:8}]},options:{plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#8892b0'},grid:{color:'#2a3a5c'}},y:{ticks:{color:'#8892b0'},grid:{color:'#2a3a5c'}}}}});
+}
+
+function switchTab(tab,el){
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  const titles={home:'Admin Overview',users:'User Management',appointments:'All Appointments',orders:'All Orders',medicines:'Medicine Management',messages:'Messages',analytics:'System Analytics'};
+  document.getElementById('topbarTitle').textContent=titles[tab]||tab;
+  if(el)el.classList.add('active');
+  if(tab==='users')loadUsers();
+  if(tab==='appointments')loadAllAppointments();
+  if(tab==='orders')loadAllOrders();
+  if(tab==='medicines')loadMedicines();
+  if(tab==='messages')loadAdminMessages();
+  if(tab==='analytics')loadAnalytics();
+}
+
+async function loadUsers(){
+  const res=await fetch('/api/admin/users');
+  const data=await res.json();
+  allUsers=data.users||[];
+  renderUsers(allUsers);
+}
+
+function filterUsers(){
+  const s=document.getElementById('userSearch').value.toLowerCase();
+  const r=document.getElementById('roleFilter').value;
+  let filtered=allUsers;
+  if(r!=='all')filtered=filtered.filter(u=>u.role===r);
+  if(s)filtered=filtered.filter(u=>u.name.toLowerCase().includes(s)||u.email.toLowerCase().includes(s));
+  renderUsers(filtered);
+}
+
+function renderUsers(users){
+  document.getElementById('usersList').innerHTML=`
+    <table style="width:100%;border-collapse:collapse;font-size:13px">
+      <thead><tr style="color:#8892b0;border-bottom:1px solid var(--border)">
+        <th style="padding:12px 8px;text-align:left">User</th>
+        <th style="padding:12px 8px;text-align:left">Email</th>
+        <th style="padding:12px 8px;text-align:left">Role</th>
+        <th style="padding:12px 8px;text-align:left">Joined</th>
+        <th style="padding:12px 8px;text-align:left">Status</th>
+        <th style="padding:12px 8px;text-align:left">Actions</th>
+      </tr></thead>
+      <tbody>${users.map(u=>`
+        <tr style="border-bottom:1px solid var(--border);transition:background 0.2s" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">
+          <td style="padding:12px 8px"><div style="display:flex;align-items:center;gap:10px"><div style="width:34px;height:34px;border-radius:50%;background:${roleGrad(u.role)};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0">${u.avatar}</div><span style="font-weight:500">${u.name}</span></div></td>
+          <td style="padding:12px 8px;color:#8892b0">${u.email}</td>
+          <td style="padding:12px 8px"><span style="padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;background:${roleGrad(u.role)}22;color:${roleColor(u.role)}">${u.role}</span></td>
+          <td style="padding:12px 8px;color:#8892b0">${u.created_at}</td>
+          <td style="padding:12px 8px"><span style="color:${u.is_banned?'#ef4444':'#10b981'}">${u.is_banned?'Banned':'Active'}</span></td>
+          <td style="padding:12px 8px">
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              ${u.role!=='admin'&&u.role!=='developer'?`
+                <button onclick="promoteUser(${u.id},'doctor')" style="padding:4px 10px;background:rgba(16,185,129,0.15);border:1px solid #10b981;border-radius:6px;color:#10b981;font-size:11px;cursor:pointer">→ Doctor</button>
+                <button onclick="toggleBan(${u.id},${!u.is_banned})" style="padding:4px 10px;background:rgba(${u.is_banned?'16,185,129':'239,68,68'},0.15);border:1px solid ${u.is_banned?'#10b981':'#ef4444'};border-radius:6px;color:${u.is_banned?'#10b981':'#ef4444'};font-size:11px;cursor:pointer">${u.is_banned?'Unban':'Ban'}</button>
+                <button onclick="deleteUser(${u.id},'${u.name}')" style="padding:4px 10px;background:rgba(239,68,68,0.1);border:1px solid #ef4444;border-radius:6px;color:#ef4444;font-size:11px;cursor:pointer">Delete</button>
+              `:'<span style="color:#8892b0;font-size:12px">Protected</span>'}
+            </div>
+          </td>
+        </tr>`).join('')}
+      </tbody>
+    </table>`;
+}
+
+function roleGrad(r){return{user:'linear-gradient(135deg,#4f8ef7,#a855f7)',doctor:'linear-gradient(135deg,#10b981,#059669)',admin:'linear-gradient(135deg,#f59e0b,#ef4444)',developer:'linear-gradient(135deg,#a855f7,#ec4899)'}[r]||'linear-gradient(135deg,#4f8ef7,#a855f7)';}
+function roleColor(r){return{user:'#4f8ef7',doctor:'#10b981',admin:'#f59e0b',developer:'#a855f7'}[r]||'#4f8ef7';}
+
+async function promoteUser(id,role){
+  if(!confirm(`Promote this user to ${role}?`))return;
+  const res=await fetch(`/api/admin/update-user/${id}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({role})});
+  const data=await res.json();showToast(data.message,'success');loadUsers();
+}
+async function toggleBan(id,ban){
+  const res=await fetch(`/api/admin/update-user/${id}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({is_banned:ban})});
+  const data=await res.json();showToast(data.message,'success');loadUsers();
+}
+async function deleteUser(id,name){
+  if(!confirm(`Permanently delete ${name}? This cannot be undone.`))return;
+  const res=await fetch(`/api/admin/delete-user/${id}`,{method:'DELETE'});
+  const data=await res.json();showToast(data.message,'success');loadUsers();
+}
+
+async function loadAllAppointments(){
+  const res=await fetch('/api/admin/all-appointments');
+  const data=await res.json();
+  document.getElementById('allApptsList').innerHTML=`
+    <table style="width:100%;border-collapse:collapse;font-size:13px">
+      <thead><tr style="color:#8892b0;border-bottom:1px solid var(--border)">
+        <th style="padding:10px 8px;text-align:left">Patient</th><th style="padding:10px 8px;text-align:left">Doctor</th>
+        <th style="padding:10px 8px;text-align:left">Date</th><th style="padding:10px 8px;text-align:left">Reason</th>
+        <th style="padding:10px 8px;text-align:left">Status</th><th style="padding:10px 8px;text-align:left">Fee</th>
+      </tr></thead>
+      <tbody>${(data.appointments||[]).map(a=>`
+        <tr style="border-bottom:1px solid var(--border)">
+          <td style="padding:10px 8px;font-weight:500">${a.patient}</td>
+          <td style="padding:10px 8px;color:#10b981">${a.doctor}</td>
+          <td style="padding:10px 8px;color:#8892b0">${a.date} ${a.time}</td>
+          <td style="padding:10px 8px">${a.reason}</td>
+          <td style="padding:10px 8px"><span style="padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;background:${statusBg(a.status)};color:${statusCol(a.status)}">${a.status}</span></td>
+          <td style="padding:10px 8px;color:${a.paid?'#10b981':'#f59e0b'}">₹${a.fee} ${a.paid?'✓':''}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>`;
+}
+
+async function loadAllOrders(){
+  const res=await fetch('/api/admin/all-orders');
+  const data=await res.json();
+  const statuses=['processing','shipped','delivered','cancelled'];
+  document.getElementById('allOrdersList').innerHTML=(data.orders||[]).map(o=>`
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+        <div>
+          <div style="font-size:15px;font-weight:600">Order #${o.id} · ${o.patient}</div>
+          <div style="font-size:13px;color:#8892b0;margin-top:4px">${o.date} · ${o.items.length} item(s)</div>
+          <div style="font-size:13px;margin-top:6px;color:#ccd6f6">${o.items.map(i=>`${i.name} x${i.qty}`).join(', ')}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:18px;font-weight:700;color:#10b981;margin-bottom:8px">₹${o.total}</div>
+          <select onchange="updateOrderStatus(${o.id},this.value)" style="padding:6px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none">
+            ${statuses.map(s=>`<option value="${s}" ${o.status===s?'selected':''}>${s}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+async function updateOrderStatus(id,status){
+  const res=await fetch(`/api/admin/update-order/${id}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({status})});
+  const data=await res.json();showToast(data.message,'success');
+}
+
+function showAddMedicine(){document.getElementById('addMedForm').classList.toggle('hidden');}
+
+async function addMedicine(){
+  const data={name:document.getElementById('medName').value,category:document.getElementById('medCat').value,price:parseFloat(document.getElementById('medPrice').value),stock:parseInt(document.getElementById('medStock').value),img:document.getElementById('medEmoji').value,desc:document.getElementById('medDesc').value};
+  if(!data.name||!data.price||!data.stock){showToast('Fill all fields','error');return;}
+  const res=await fetch('/api/admin/add-medicine',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+  const d=await res.json();showToast(d.message,'success');
+  document.getElementById('addMedForm').classList.add('hidden');loadMedicines();
+}
+
+async function loadMedicines(){
+  const res=await fetch('/api/admin/medicines');
+  const data=await res.json();
+  document.getElementById('medicinesList').innerHTML=`
+    <table style="width:100%;border-collapse:collapse;font-size:13px">
+      <thead><tr style="color:#8892b0;border-bottom:1px solid var(--border)">
+        <th style="padding:10px 8px;text-align:left">Medicine</th><th style="padding:10px 8px;text-align:left">Category</th>
+        <th style="padding:10px 8px;text-align:left">Price</th><th style="padding:10px 8px;text-align:left">Stock</th>
+        <th style="padding:10px 8px;text-align:left">Status</th><th style="padding:10px 8px;text-align:left">Actions</th>
+      </tr></thead>
+      <tbody>${(data.medicines||[]).map(m=>`
+        <tr style="border-bottom:1px solid var(--border)">
+          <td style="padding:10px 8px"><span style="font-size:18px;margin-right:8px">${m.img}</span><span style="font-weight:500">${m.name}</span></td>
+          <td style="padding:10px 8px"><span style="padding:3px 10px;border-radius:20px;background:rgba(79,142,247,0.15);color:#4f8ef7;font-size:11px">${m.category}</span></td>
+          <td style="padding:10px 8px;color:#10b981;font-weight:600">₹${m.price}</td>
+          <td style="padding:10px 8px;color:${m.stock<20?'#ef4444':'#ccd6f6'}">${m.stock}</td>
+          <td style="padding:10px 8px"><span style="color:${m.active?'#10b981':'#ef4444'}">${m.active?'Active':'Inactive'}</span></td>
+          <td style="padding:10px 8px">
+            <button onclick="toggleMedicine(${m.id},${!m.active})" style="padding:4px 10px;background:rgba(${m.active?'239,68,68':'16,185,129'},0.15);border:1px solid ${m.active?'#ef4444':'#10b981'};border-radius:6px;color:${m.active?'#ef4444':'#10b981'};font-size:11px;cursor:pointer;margin-right:6px">${m.active?'Deactivate':'Activate'}</button>
+            <button onclick="deleteMedicine(${m.id})" style="padding:4px 10px;background:rgba(239,68,68,0.1);border:1px solid #ef4444;border-radius:6px;color:#ef4444;font-size:11px;cursor:pointer">Delete</button>
+          </td>
+        </tr>`).join('')}
+      </tbody>
+    </table>`;
+}
+
+async function toggleMedicine(id,active){
+  await fetch(`/api/admin/update-medicine/${id}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({active})});
+  showToast('Updated!','success');loadMedicines();
+}
+async function deleteMedicine(id){
+  if(!confirm('Delete this medicine?'))return;
+  await fetch(`/api/admin/delete-medicine/${id}`,{method:'DELETE'});
+  showToast('Deleted!','success');loadMedicines();
+}
+
+async function loadAdminMessages(){
+  const res=await fetch('/api/get-contacts');
+  const data=await res.json();
+  document.getElementById('adminContactsPanel').innerHTML=data.contacts.map(c=>`
+    <div class="contact-item" onclick="openAdminChat(${c.id},'${c.name}','${c.avatar}')">
+      <div class="contact-avatar" style="background:${roleGrad(c.role)}">${c.avatar}</div>
+      <div style="flex:1"><div style="font-size:14px;font-weight:500">${c.name}</div><div style="font-size:11px;color:#8892b0;text-transform:capitalize">${c.role}</div></div>
+      ${c.unread?`<span style="background:#ef4444;color:#fff;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700">${c.unread}</span>`:''}
+    </div>`).join('');
+}
+
+async function openAdminChat(id,name,avatar){
+  currentChat=id;
+  if(chatPollInterval)clearInterval(chatPollInterval);
+  const panel=document.getElementById('adminChatPanel');
+  panel.innerHTML=`
+    <div style="padding:14px 18px;background:var(--bg3);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px">
+      <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#f59e0b,#ef4444);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff">${avatar}</div>
+      <div style="font-size:15px;font-weight:600">${name}</div>
+    </div>
+    <div id="adminMsgList" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;min-height:300px"></div>
+    <div style="padding:12px;border-top:1px solid var(--border);display:flex;gap:8px">
+      <input type="text" id="adminMsgInput" placeholder="Type a message..." style="flex:1;padding:10px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;outline:none" onkeypress="if(event.key==='Enter')adminSendMsg(${id})">
+      <button onclick="adminSendMsg(${id})" style="padding:10px 18px;background:linear-gradient(135deg,#f59e0b,#ef4444);border:none;border-radius:10px;color:#fff;cursor:pointer;font-size:15px">➤</button>
+    </div>`;
+  await fetchAdminMessages(id);
+  chatPollInterval=setInterval(()=>fetchAdminMessages(id),5000);
+}
+
+async function fetchAdminMessages(id){
+  const res=await fetch(`/api/get-messages/${id}`);
+  const data=await res.json();
+  const list=document.getElementById('adminMsgList');
+  if(!list)return;
+  list.innerHTML=data.messages.map(m=>`
+    <div style="display:flex;flex-direction:${m.is_mine?'row-reverse':'row'};gap:8px;align-items:flex-end">
+      <div style="max-width:70%;padding:10px 14px;border-radius:${m.is_mine?'16px 16px 4px 16px':'16px 16px 16px 4px'};background:${m.is_mine?'linear-gradient(135deg,#f59e0b,#ef4444)':'var(--bg3)'};color:${m.is_mine?'#fff':'var(--text)'};font-size:14px;line-height:1.5">
+        ${m.content}<div style="font-size:10px;opacity:0.7;margin-top:4px;text-align:right">${m.time}</div>
+      </div>
+    </div>`).join('');
+  list.scrollTop=list.scrollHeight;
+}
+
+async function adminSendMsg(id){
+  const input=document.getElementById('adminMsgInput');
+  const content=input.value.trim();if(!content)return;input.value='';
+  await fetch('/api/send-message',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({receiver_id:id,content})});
+  await fetchAdminMessages(id);
+}
+
+async function loadAnalytics(){
+  const [stats,health]=await Promise.all([fetch('/api/admin/analytics').then(r=>r.json()),fetch('/api/stats').then(r=>r.json())]);
+  document.getElementById('analyticsStats').innerHTML=`
+    <div class="qs-card"><div class="qs-num" style="color:#f59e0b">${stats.total_users}</div><div class="qs-label">Total Users</div></div>
+    <div class="qs-card"><div class="qs-num" style="color:#10b981">₹${stats.total_revenue+stats.appointment_revenue}</div><div class="qs-label">Total Revenue</div></div>
+    <div class="qs-card"><div class="qs-num" style="color:#4f8ef7">${stats.total_appointments}</div><div class="qs-label">Appointments</div></div>
+    <div class="qs-card"><div class="qs-num" style="color:#a855f7">${stats.total_orders}</div><div class="qs-label">Orders</div></div>
+  `;
+  new Chart(document.getElementById('aSymptomChart'),{type:'bar',data:{labels:Object.keys(health.symptom_frequency),datasets:[{data:Object.values(health.symptom_frequency),backgroundColor:['#4f8ef7','#a855f7','#10b981','#f59e0b','#ef4444','#06b6d4','#ec4899','#84cc16'],borderRadius:6}]},options:{plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#8892b0'},grid:{color:'#2a3a5c'}},y:{ticks:{color:'#8892b0'},grid:{color:'#2a3a5c'}}}}});
+  new Chart(document.getElementById('aDiseaseChart'),{type:'doughnut',data:{labels:Object.keys(health.disease_distribution),datasets:[{data:Object.values(health.disease_distribution),backgroundColor:['#ef4444','#3498db','#9b59b6'],borderWidth:0}]},options:{plugins:{legend:{labels:{color:'#8892b0'}}}}});
+  new Chart(document.getElementById('aTrendChart'),{type:'line',data:{labels:Object.keys(health.monthly_cases),datasets:[{label:'Cases',data:Object.values(health.monthly_cases),borderColor:'#f59e0b',backgroundColor:'rgba(245,158,11,0.08)',tension:0.4,fill:true,pointBackgroundColor:'#f59e0b',pointRadius:4}]},options:{plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#8892b0'},grid:{color:'#2a3a5c'}},y:{ticks:{color:'#8892b0'},grid:{color:'#2a3a5c'}}}}});
+}
+
+function statusBg(s){return{pending:'rgba(245,158,11,0.15)',confirmed:'rgba(16,185,129,0.15)',completed:'rgba(79,142,247,0.15)',rejected:'rgba(239,68,68,0.15)'}[s]||'var(--bg3)';}
+function statusCol(s){return{pending:'#f59e0b',confirmed:'#10b981',completed:'#4f8ef7',rejected:'#ef4444'}[s]||'#8892b0';}
+function doLogout(){fetch('/api/logout').then(()=>window.location.href='/login');}
+function toggleSidebar(){document.getElementById('sidebar').classList.toggle('open');}
+function showToast(msg,type='info'){
+  const tc=document.getElementById('toastContainer');const t=document.createElement('div');t.className=`toast ${type}`;
+  const icons={success:'✓',error:'✗',info:'ℹ'};t.innerHTML=`<span>${icons[type]}</span><span>${msg}</span>`;
+  tc.appendChild(t);setTimeout(()=>t.remove(),3500);
+}
+window.addEventListener('DOMContentLoaded',init);
+</script>
+<style>
+.messages-layout{display:grid;grid-template-columns:280px 1fr;gap:0;background:var(--bg2);border:1px solid var(--border);border-radius:16px;overflow:hidden;min-height:500px}
+.contacts-panel{border-right:1px solid var(--border);overflow-y:auto}
+.contact-item{display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;transition:background 0.2s;border-bottom:1px solid var(--border)}
+.contact-item:hover,.contact-item.active{background:var(--bg3)}
+.contact-avatar{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;flex-shrink:0}
+.chat-panel{display:flex;flex-direction:column}
+</style>
+</body>
+</html>

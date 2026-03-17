@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HealthAI — Doctor Portal</title>
+<link rel="stylesheet" href="/static/style.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+</head>
+<body>
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-icon" style="background:linear-gradient(135deg,#10b981,#059669)">+</div>
+    <div><div class="brand-name">Doctor Portal</div><div class="brand-sub">HealthAI Pro</div></div>
+  </div>
+  <nav class="sidebar-nav">
+    <a class="nav-item active" onclick="switchTab('home',this)"><span class="nav-icon">⌂</span>Dashboard</a>
+    <a class="nav-item" onclick="switchTab('appointments',this)"><span class="nav-icon">◷</span>Appointments</a>
+    <a class="nav-item" onclick="switchTab('patients',this)"><span class="nav-icon">♡</span>My Patients</a>
+    <a class="nav-item" onclick="switchTab('prescriptions',this)"><span class="nav-icon">✎</span>Prescriptions</a>
+    <a class="nav-item" onclick="switchTab('messages',this)"><span class="nav-icon">◎</span>Messages <span id="msgBadge" class="badge hidden">0</span></a>
+    <a class="nav-item" onclick="switchTab('earnings',this)"><span class="nav-icon">₹</span>Earnings</a>
+    <a class="nav-item" onclick="switchTab('profile',this)"><span class="nav-icon">◈</span>My Profile</a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-card" id="sidebarUser"></div>
+    <button class="logout-btn" onclick="doLogout()">Sign Out</button>
+  </div>
+</div>
+
+<div class="main-content">
+  <div class="topbar">
+    <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+    <div class="topbar-title" id="topbarTitle">Dashboard</div>
+    <div class="topbar-actions">
+      <div class="notif-btn">🔔<span class="notif-dot"></span></div>
+      <div class="avatar-btn" id="topAvatar" style="background:linear-gradient(135deg,#10b981,#059669)"></div>
+    </div>
+  </div>
+
+  <!-- HOME -->
+  <div id="tab-home" class="tab-content active">
+    <div class="welcome-banner" id="welcomeBanner"></div>
+    <div class="quick-stats" id="docStats"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:20px">
+      <div class="chart-card">
+        <h3>Today's appointments</h3>
+        <div id="todayAppts"></div>
+      </div>
+      <div class="chart-card">
+        <h3>Recent patients</h3>
+        <div id="recentPatients"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- APPOINTMENTS -->
+  <div id="tab-appointments" class="tab-content">
+    <div class="section-header"><h2>Appointment Requests</h2><p>Manage all patient appointments</p></div>
+    <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+      <button class="filter-btn active" onclick="filterAppts('all',this)">All</button>
+      <button class="filter-btn" onclick="filterAppts('pending',this)">Pending</button>
+      <button class="filter-btn" onclick="filterAppts('confirmed',this)">Confirmed</button>
+      <button class="filter-btn" onclick="filterAppts('completed',this)">Completed</button>
+      <button class="filter-btn" onclick="filterAppts('rejected',this)">Rejected</button>
+    </div>
+    <div id="apptsList"></div>
+  </div>
+
+  <!-- PATIENTS -->
+  <div id="tab-patients" class="tab-content">
+    <div class="section-header"><h2>My Patients</h2><p>All patients who booked with you</p></div>
+    <div id="patientsList" class="doctors-grid"></div>
+    <div id="patientDetail" class="hidden" style="margin-top:20px"></div>
+  </div>
+
+  <!-- PRESCRIPTIONS -->
+  <div id="tab-prescriptions" class="tab-content">
+    <div class="section-header"><h2>Write Prescription</h2><p>Send digital prescriptions to patients</p></div>
+    <div class="booking-form">
+      <div class="booking-fields" style="grid-template-columns:1fr 1fr">
+        <div class="form-group">
+          <label>Select Patient</label>
+          <select id="rxPatient"></select>
+        </div>
+        <div class="form-group">
+          <label>Diagnosis</label>
+          <input type="text" id="rxDiagnosis" placeholder="e.g. Viral Fever">
+        </div>
+        <div class="form-group" style="grid-column:1/-1">
+          <label>Medicines (one per line: Name - Dosage - Duration)</label>
+          <textarea id="rxMedicines" rows="4" placeholder="Paracetamol 500mg - 1 tablet - 3 times daily&#10;Cetirizine 10mg - 1 tablet - Once at night" style="width:100%;padding:11px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;outline:none;resize:vertical"></textarea>
+        </div>
+        <div class="form-group" style="grid-column:1/-1">
+          <label>Instructions & Notes</label>
+          <textarea id="rxInstructions" rows="3" placeholder="Take medicines after food. Drink plenty of water. Rest for 3 days." style="width:100%;padding:11px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;outline:none;resize:vertical"></textarea>
+        </div>
+      </div>
+      <button class="primary-btn" onclick="sendPrescription()" style="margin-top:16px">Send Prescription</button>
+    </div>
+    <div class="section-header" style="margin-top:28px"><h2>Sent Prescriptions</h2></div>
+    <div id="sentPrescriptions"></div>
+  </div>
+
+  <!-- MESSAGES -->
+  <div id="tab-messages" class="tab-content">
+    <div class="section-header"><h2>Messages</h2><p>Chat with your patients and admin</p></div>
+    <div class="messages-layout">
+      <div class="contacts-panel" id="contactsPanel"></div>
+      <div class="chat-panel" id="chatPanel">
+        <div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted);font-size:14px">Select a contact to start chatting</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EARNINGS -->
+  <div id="tab-earnings" class="tab-content">
+    <div class="section-header"><h2>Earnings & Payments</h2><p>Track your consultation revenue</p></div>
+    <div id="earningsStats" class="quick-stats"></div>
+    <div style="margin-top:20px">
+      <div class="chart-card">
+        <h3>Payment history</h3>
+        <div id="paymentHistory"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROFILE -->
+  <div id="tab-profile" class="tab-content">
+    <div class="section-header"><h2>My Profile</h2><p>Update your professional details</p></div>
+    <div class="profile-card" id="profileCard"></div>
+  </div>
+</div>
+
+<div id="toastContainer" style="position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px"></div>
+<script>
+let currentUser=null, allAppts=[], allPatients=[], currentChat=null, chatPollInterval=null;
+
+async function init(){
+  const res=await fetch('/api/current-user');
+  if(!res.ok){window.location.href='/login';return;}
+  currentUser=await res.json();
+  document.getElementById('topAvatar').textContent=currentUser.avatar;
+  document.getElementById('sidebarUser').innerHTML=`<div style="font-size:13px;font-weight:600">${currentUser.name}</div><div style="font-size:11px;color:#8892b0">${currentUser.specialization||'Doctor'}</div>`;
+  loadHome();
+  checkUnreadMessages();
+  setInterval(checkUnreadMessages,30000);
+}
+
+async function checkUnreadMessages(){
+  const res=await fetch('/api/get-contacts');
+  const data=await res.json();
+  const total=data.contacts.reduce((s,c)=>s+c.unread,0);
+  const badge=document.getElementById('msgBadge');
+  if(total>0){badge.textContent=total;badge.classList.remove('hidden');}
+  else badge.classList.add('hidden');
+}
+
+async function loadHome(){
+  const hour=new Date().getHours();
+  const greet=hour<12?'Good morning':hour<18?'Good afternoon':'Good evening';
+  document.getElementById('welcomeBanner').innerHTML=`
+    <div style="font-size:13px;color:#8892b0;margin-bottom:6px">${greet}, Doctor</div>
+    <div style="font-size:26px;font-weight:800;margin-bottom:6px;background:linear-gradient(135deg,#fff,#10b981);-webkit-background-clip:text;-webkit-text-fill-color:transparent">${currentUser.name}</div>
+    <div style="font-size:14px;color:#8892b0">${currentUser.specialization||'General Physician'} · HealthAI Pro</div>
+  `;
+  const [earn,appts]=await Promise.all([fetch('/api/doctor/earnings').then(r=>r.json()),fetch('/api/doctor/appointments').then(r=>r.json())]);
+  allAppts=appts.appointments||[];
+  document.getElementById('docStats').innerHTML=`
+    <div class="qs-card"><div class="qs-num" style="color:#10b981">₹${earn.total_earned||0}</div><div class="qs-label">Total Earned</div></div>
+    <div class="qs-card"><div class="qs-num" style="color:#4f8ef7">${earn.total_appointments||0}</div><div class="qs-label">Total Appointments</div></div>
+    <div class="qs-card"><div class="qs-num" style="color:#f59e0b">${earn.pending_count||0}</div><div class="qs-label">Pending</div></div>
+    <div class="qs-card"><div class="qs-num" style="color:#a855f7">${earn.confirmed||0}</div><div class="qs-label">Confirmed</div></div>
+  `;
+  const today=new Date().toISOString().split('T')[0];
+  const todayList=allAppts.filter(a=>a.date===today);
+  document.getElementById('todayAppts').innerHTML=todayList.length?todayList.map(a=>`
+    <div style="padding:12px;background:var(--bg3);border-radius:10px;margin-bottom:8px">
+      <div style="font-size:14px;font-weight:600">${a.patient}</div>
+      <div style="font-size:12px;color:#8892b0">${a.time} · ${a.reason}</div>
+      <span style="font-size:11px;padding:2px 10px;border-radius:20px;background:${statusColor(a.status)}22;color:${statusColor(a.status)}">${a.status}</span>
+    </div>`).join(''):'<div style="color:#8892b0;font-size:13px;padding:20px 0">No appointments today</div>';
+}
+
+function statusColor(s){return{pending:'#f59e0b',confirmed:'#10b981',completed:'#4f8ef7',rejected:'#ef4444'}[s]||'#8892b0';}
+
+function switchTab(tab,el){
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  const titles={home:'Dashboard',appointments:'Appointments',patients:'My Patients',prescriptions:'Prescriptions',messages:'Messages',earnings:'Earnings',profile:'My Profile'};
+  document.getElementById('topbarTitle').textContent=titles[tab]||tab;
+  if(el)el.classList.add('active');
+  if(tab==='appointments')loadAppointments();
+  if(tab==='patients')loadPatients();
+  if(tab==='messages')loadMessages();
+  if(tab==='earnings')loadEarnings();
+  if(tab==='profile')loadProfile();
+  if(tab==='prescriptions')loadPrescriptionTab();
+}
+
+async function loadAppointments(){
+  const res=await fetch('/api/doctor/appointments');
+  const data=await res.json();
+  allAppts=data.appointments||[];
+  renderAppts(allAppts);
+}
+
+function filterAppts(status,el){
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  const filtered=status==='all'?allAppts:allAppts.filter(a=>a.status===status);
+  renderAppts(filtered);
+}
+
+function renderAppts(list){
+  document.getElementById('apptsList').innerHTML=list.length?list.map(a=>`
+    <div class="appt-card" id="appt-${a.id}">
+      <div class="appt-left">
+        <div class="appt-avatar">${a.patient[0]}</div>
+        <div>
+          <div style="font-size:15px;font-weight:600">${a.patient}</div>
+          <div style="font-size:13px;color:#8892b0">${a.date} · ${a.time}</div>
+          <div style="font-size:13px;color:#ccd6f6;margin-top:4px">${a.reason}</div>
+          ${a.notes?`<div style="font-size:12px;color:#8892b0;margin-top:4px;font-style:italic">Note: ${a.notes}</div>`:''}
+        </div>
+      </div>
+      <div class="appt-right">
+        <div style="text-align:right;margin-bottom:8px">
+          <span style="font-size:12px;padding:3px 12px;border-radius:20px;background:${statusColor(a.status)}22;color:${statusColor(a.status)};font-weight:600">${a.status.toUpperCase()}</span>
+          <div style="font-size:13px;margin-top:4px;color:${a.paid?'#10b981':'#f59e0b'}">₹${a.fee} ${a.paid?'· Paid':'· Unpaid'}</div>
+        </div>
+        ${a.status==='pending'?`
+          <div style="display:flex;gap:8px">
+            <button class="action-btn confirm" onclick="updateAppt(${a.id},'confirmed')">✓ Accept</button>
+            <button class="action-btn reject" onclick="updateAppt(${a.id},'rejected')">✗ Reject</button>
+          </div>`:
+        a.status==='confirmed'?`
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="action-btn confirm" onclick="updateAppt(${a.id},'completed')">✓ Complete</button>
+            <button class="action-btn info" onclick="openNoteModal(${a.id})">✎ Add Note</button>
+          </div>`:''}
+      </div>
+    </div>`).join(''):'<div style="color:#8892b0;text-align:center;padding:40px;font-size:14px">No appointments found</div>';
+}
+
+async function updateAppt(id,status,notes=''){
+  const res=await fetch(`/api/doctor/update-appointment/${id}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({status,notes})});
+  const data=await res.json();
+  showToast(data.message,'success');
+  loadAppointments();
+}
+
+function openNoteModal(id){
+  const note=prompt('Add note for this appointment:');
+  if(note!==null) updateAppt(id,'confirmed',note);
+}
+
+async function loadPatients(){
+  const res=await fetch('/api/doctor/patients');
+  const data=await res.json();
+  allPatients=data.patients||[];
+  document.getElementById('patientsList').innerHTML=allPatients.map(p=>`
+    <div class="doctor-card" onclick="viewPatient(${p.id})" style="cursor:pointer">
+      <div class="doc-header">
+        <div class="doc-avatar" style="background:linear-gradient(135deg,#4f8ef7,#a855f7)">${p.avatar}</div>
+        <div><div class="doc-name">${p.name}</div><div style="font-size:12px;color:#8892b0">${p.email}</div></div>
+      </div>
+      <div style="font-size:13px;color:#8892b0">
+        ${p.age?`Age: ${p.age} · `:''}${p.blood_group?`Blood: ${p.blood_group} · `:''}${p.phone||'No phone'}
+      </div>
+      <button class="book-doc-btn" style="margin-top:12px">View Records →</button>
+    </div>`).join('')||'<div style="color:#8892b0;font-size:14px">No patients yet</div>';
+}
+
+async function viewPatient(id){
+  const res=await fetch(`/api/doctor/patient-records/${id}`);
+  const data=await res.json();
+  const p=allPatients.find(x=>x.id===id);
+  document.getElementById('patientDetail').classList.remove('hidden');
+  document.getElementById('patientDetail').innerHTML=`
+    <div class="chart-card">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">
+        <div class="doc-avatar" style="background:linear-gradient(135deg,#4f8ef7,#a855f7);width:52px;height:52px;font-size:20px">${p?.avatar||'P'}</div>
+        <div><div style="font-size:18px;font-weight:700">${p?.name||'Patient'}</div><div style="font-size:13px;color:#8892b0">${p?.email||''}</div></div>
+      </div>
+      <h3 style="margin-bottom:12px;font-size:15px">AI Diagnosis History</h3>
+      ${data.records.length?data.records.map(r=>`
+        <div style="padding:10px 14px;background:var(--bg3);border-radius:10px;margin-bottom:8px;display:flex;justify-content:space-between">
+          <span style="font-size:14px;font-weight:600">${r.diagnosis}</span>
+          <span style="font-size:12px;color:#8892b0">${r.confidence}% · ${r.date}</span>
+        </div>`).join(''):'<div style="color:#8892b0;font-size:13px">No AI records</div>'}
+      <h3 style="margin:16px 0 12px;font-size:15px">Appointment History</h3>
+      ${data.appointments.length?data.appointments.map(a=>`
+        <div style="padding:10px 14px;background:var(--bg3);border-radius:10px;margin-bottom:8px;display:flex;justify-content:space-between">
+          <span style="font-size:13px">${a.reason}</span>
+          <span style="font-size:12px;color:${statusColor(a.status)}">${a.status} · ${a.date}</span>
+        </div>`).join(''):'<div style="color:#8892b0;font-size:13px">No appointments</div>'}
+    </div>`;
+  document.getElementById('patientDetail').scrollIntoView({behavior:'smooth'});
+}
+
+async function loadPrescriptionTab(){
+  const res=await fetch('/api/doctor/patients');
+  const data=await res.json();
+  const sel=document.getElementById('rxPatient');
+  sel.innerHTML=data.patients.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+  const rxRes=await fetch('/api/doctor/appointments');
+  const rxData=await rxRes.json();
+}
+
+async function sendPrescription(){
+  const pid=document.getElementById('rxPatient').value;
+  const diag=document.getElementById('rxDiagnosis').value;
+  const meds=document.getElementById('rxMedicines').value;
+  const inst=document.getElementById('rxInstructions').value;
+  if(!pid||!diag||!meds){showToast('Please fill all required fields','error');return;}
+  const res=await fetch('/api/doctor/prescribe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({patient_id:parseInt(pid),diagnosis:diag,medicines:meds,instructions:inst})});
+  const data=await res.json();
+  showToast(data.message,'success');
+  document.getElementById('rxDiagnosis').value='';
+  document.getElementById('rxMedicines').value='';
+  document.getElementById('rxInstructions').value='';
+}
+
+async function loadMessages(){
+  const res=await fetch('/api/get-contacts');
+  const data=await res.json();
+  document.getElementById('contactsPanel').innerHTML=data.contacts.map(c=>`
+    <div class="contact-item ${currentChat===c.id?'active':''}" onclick="openChat(${c.id},'${c.name}','${c.avatar}')">
+      <div class="contact-avatar">${c.avatar}</div>
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:500">${c.name}</div>
+        <div style="font-size:11px;color:#8892b0;text-transform:capitalize">${c.role}</div>
+      </div>
+      ${c.unread?`<span style="background:#ef4444;color:#fff;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700">${c.unread}</span>`:''}
+    </div>`).join('');
+}
+
+async function openChat(id,name,avatar){
+  currentChat=id;
+  if(chatPollInterval)clearInterval(chatPollInterval);
+  const panel=document.getElementById('chatPanel');
+  panel.innerHTML=`
+    <div style="padding:14px 18px;background:var(--bg3);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px">
+      <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#4f8ef7,#a855f7);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff">${avatar}</div>
+      <div style="font-size:15px;font-weight:600">${name}</div>
+    </div>
+    <div id="msgList" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;min-height:300px"></div>
+    <div style="padding:12px;border-top:1px solid var(--border);display:flex;gap:8px">
+      <input type="text" id="msgInput" placeholder="Type a message..." style="flex:1;padding:10px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;outline:none" onkeypress="if(event.key==='Enter')sendMsg(${id})">
+      <button onclick="sendMsg(${id})" style="padding:10px 18px;background:linear-gradient(135deg,#10b981,#059669);border:none;border-radius:10px;color:#fff;cursor:pointer;font-size:15px">➤</button>
+    </div>`;
+  await fetchMessages(id);
+  chatPollInterval=setInterval(()=>fetchMessages(id),5000);
+  loadMessages();
+}
+
+async function fetchMessages(id){
+  const res=await fetch(`/api/get-messages/${id}`);
+  const data=await res.json();
+  const list=document.getElementById('msgList');
+  if(!list)return;
+  list.innerHTML=data.messages.map(m=>`
+    <div style="display:flex;flex-direction:${m.is_mine?'row-reverse':'row'};gap:8px;align-items:flex-end">
+      <div style="max-width:70%;padding:10px 14px;border-radius:${m.is_mine?'16px 16px 4px 16px':'16px 16px 16px 4px'};background:${m.is_mine?'linear-gradient(135deg,#10b981,#059669)':'var(--bg3)'};color:${m.is_mine?'#fff':'var(--text)'};font-size:14px;line-height:1.5">
+        ${m.content}
+        <div style="font-size:10px;opacity:0.7;margin-top:4px;text-align:right">${m.time}</div>
+      </div>
+    </div>`).join('');
+  list.scrollTop=list.scrollHeight;
+}
+
+async function sendMsg(id){
+  const input=document.getElementById('msgInput');
+  const content=input.value.trim();
+  if(!content)return;
+  input.value='';
+  await fetch('/api/send-message',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({receiver_id:id,content})});
+  await fetchMessages(id);
+}
+
+async function loadEarnings(){
+  const res=await fetch('/api/doctor/earnings');
+  const data=await res.json();
+  document.getElementById('earningsStats').innerHTML=`
+    <div class="qs-card"><div class="qs-num" style="color:#10b981">₹${data.total_earned}</div><div class="qs-label">Total Earned</div></div>
+    <div class="qs-card"><div class="qs-num" style="color:#f59e0b">₹${data.pending}</div><div class="qs-label">Pending Payment</div></div>
+    <div class="qs-card"><div class="qs-num" style="color:#4f8ef7">${data.total_appointments}</div><div class="qs-label">Total Appointments</div></div>
+    <div class="qs-card"><div class="qs-num" style="color:#a855f7">${data.confirmed}</div><div class="qs-label">Confirmed</div></div>
+  `;
+  const apptRes=await fetch('/api/doctor/appointments');
+  const apptData=await apptRes.json();
+  const paid=apptData.appointments.filter(a=>a.paid);
+  document.getElementById('paymentHistory').innerHTML=paid.length?`
+    <table style="width:100%;border-collapse:collapse;font-size:13px">
+      <thead><tr style="color:#8892b0;border-bottom:1px solid var(--border)">
+        <th style="padding:8px;text-align:left">Patient</th>
+        <th style="padding:8px;text-align:left">Date</th>
+        <th style="padding:8px;text-align:left">Amount</th>
+        <th style="padding:8px;text-align:left">Status</th>
+      </tr></thead>
+      <tbody>${paid.map(a=>`<tr style="border-bottom:1px solid var(--border)">
+        <td style="padding:10px 8px">${a.patient}</td>
+        <td style="padding:10px 8px;color:#8892b0">${a.date}</td>
+        <td style="padding:10px 8px;color:#10b981;font-weight:600">₹${a.fee}</td>
+        <td style="padding:10px 8px"><span style="color:#10b981">✓ Paid</span></td>
+      </tr>`).join('')}</tbody>
+    </table>`:'<div style="color:#8892b0;font-size:14px;padding:20px 0">No payment records yet</div>';
+}
+
+async function loadProfile(){
+  document.getElementById('profileCard').innerHTML=`
+    <div style="display:flex;align-items:center;gap:20px;margin-bottom:28px">
+      <div style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#10b981,#059669);display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:700;color:#fff">${currentUser.avatar}</div>
+      <div><div style="font-size:22px;font-weight:700">${currentUser.name}</div><div style="color:#10b981;font-size:14px">${currentUser.specialization||'Doctor'} · ${currentUser.experience||''}</div><div style="font-size:13px;color:#8892b0">${currentUser.email}</div></div>
+    </div>
+    <div class="booking-fields">
+      <div class="form-group"><label>Full name</label><input type="text" id="pName" value="${currentUser.name}"></div>
+      <div class="form-group"><label>Phone</label><input type="text" id="pPhone" value="${currentUser.phone||''}"></div>
+      <div class="form-group"><label>Specialization</label><input type="text" id="pSpec" value="${currentUser.specialization||''}"></div>
+      <div class="form-group"><label>Experience</label><input type="text" id="pExp" value="${currentUser.experience||''}"></div>
+      <div class="form-group" style="grid-column:1/-1"><label>Bio</label><textarea id="pBio" rows="3" style="width:100%;padding:11px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;outline:none">${currentUser.bio||''}</textarea></div>
+    </div>
+    <button class="primary-btn" style="margin-top:16px;background:linear-gradient(135deg,#10b981,#059669)" onclick="saveProfile()">Save Changes</button>
+  `;
+}
+
+async function saveProfile(){
+  const data={name:document.getElementById('pName').value,phone:document.getElementById('pPhone').value,specialization:document.getElementById('pSpec').value,experience:document.getElementById('pExp').value,bio:document.getElementById('pBio').value};
+  const res=await fetch('/api/update-profile',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+  const d=await res.json();
+  showToast(d.message,'success');
+  currentUser={...currentUser,...data};
+}
+
+function doLogout(){fetch('/api/logout').then(()=>window.location.href='/login');}
+function toggleSidebar(){document.getElementById('sidebar').classList.toggle('open');}
+function showToast(msg,type='info'){
+  const tc=document.getElementById('toastContainer');
+  const t=document.createElement('div');t.className=`toast ${type}`;
+  const icons={success:'✓',error:'✗',info:'ℹ'};
+  t.innerHTML=`<span>${icons[type]}</span><span>${msg}</span>`;
+  tc.appendChild(t);setTimeout(()=>t.remove(),3500);
+}
+window.addEventListener('DOMContentLoaded',init);
+</script>
+<style>
+.badge{background:#ef4444;color:#fff;border-radius:10px;padding:1px 7px;font-size:11px;font-weight:700;margin-left:auto}
+.filter-btn{padding:8px 18px;background:var(--bg3);border:1px solid var(--border);border-radius:20px;color:var(--muted);font-size:13px;cursor:pointer;transition:all 0.2s}
+.filter-btn.active,.filter-btn:hover{background:linear-gradient(135deg,#10b981,#059669);border-color:transparent;color:#fff}
+.appt-card{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:flex-start;gap:16px;transition:border-color 0.2s}
+.appt-card:hover{border-color:#10b981}
+.appt-left{display:flex;gap:14px;align-items:flex-start}
+.appt-right{flex-shrink:0;text-align:right}
+.appt-avatar{width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,#4f8ef7,#a855f7);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#fff;flex-shrink:0}
+.action-btn{padding:7px 14px;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;transition:opacity 0.2s}
+.action-btn.confirm{background:linear-gradient(135deg,#10b981,#059669);color:#fff}
+.action-btn.reject{background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff}
+.action-btn.info{background:linear-gradient(135deg,#4f8ef7,#3b82f6);color:#fff}
+.action-btn:hover{opacity:0.85}
+.messages-layout{display:grid;grid-template-columns:280px 1fr;gap:0;background:var(--bg2);border:1px solid var(--border);border-radius:16px;overflow:hidden;min-height:500px}
+.contacts-panel{border-right:1px solid var(--border);overflow-y:auto}
+.contact-item{display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;transition:background 0.2s;border-bottom:1px solid var(--border)}
+.contact-item:hover,.contact-item.active{background:var(--bg3)}
+.contact-avatar{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#4f8ef7,#a855f7);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;flex-shrink:0}
+.chat-panel{display:flex;flex-direction:column}
+.profile-card{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:28px}
+</style>
+</body>
+</html>

@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HealthAI Pro</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;600&display=swap');
+
+*{margin:0;padding:0;box-sizing:border-box}
+
+body{
+  background:#f0f4ff;
+  overflow:hidden;
+  font-family:'Inter',sans-serif;
+  width:100vw;height:100vh;
+}
+
+/* BACKGROUND */
+.bg{
+  position:fixed;inset:0;
+  background:linear-gradient(135deg,#f0f4ff 0%,#e8f0fe 30%,#fce4ec 60%,#f3e5f5 100%);
+  animation:bgShift 8s ease infinite alternate;
+}
+@keyframes bgShift{
+  0%{background:linear-gradient(135deg,#f0f4ff,#e8f0fe,#fce4ec,#f3e5f5)}
+  50%{background:linear-gradient(225deg,#e3f2fd,#f3e5f5,#e8f5e9,#fff9c4)}
+  100%{background:linear-gradient(315deg,#fce4ec,#e8eaf6,#e0f7fa,#f9fbe7)}
+}
+
+/* PARTICLES */
+.particles{position:fixed;inset:0;pointer-events:none;z-index:1}
+.particle{
+  position:absolute;
+  font-size:24px;
+  opacity:0;
+  animation:floatParticle linear infinite;
+  filter:drop-shadow(0 0 8px rgba(100,150,255,0.4));
+}
+@keyframes floatParticle{
+  0%{opacity:0;transform:translateY(100vh) rotate(0deg) scale(0.5)}
+  10%{opacity:0.8}
+  90%{opacity:0.6}
+  100%{opacity:0;transform:translateY(-100px) rotate(360deg) scale(1.2)}
+}
+
+/* HEARTBEAT LINE */
+.heartbeat-container{
+  position:fixed;bottom:80px;left:50%;transform:translateX(-50%);
+  width:600px;height:80px;z-index:10;opacity:0;
+  animation:fadeInHeart 1s ease 2s forwards;
+}
+@keyframes fadeInHeart{to{opacity:1}}
+
+.heartbeat-svg{width:100%;height:100%}
+.heartbeat-path{
+  stroke:url(#heartGrad);
+  stroke-width:3;
+  fill:none;
+  stroke-dasharray:1200;
+  stroke-dashoffset:1200;
+  animation:drawHeart 2s ease 2.5s forwards;
+  filter:drop-shadow(0 0 6px rgba(233,30,99,0.6));
+}
+@keyframes drawHeart{to{stroke-dashoffset:0}}
+
+/* MAIN CONTAINER */
+.intro-container{
+  position:fixed;inset:0;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  z-index:10;
+  gap:0;
+}
+
+/* ANIME SCENE */
+.anime-scene{
+  position:relative;
+  width:700px;height:320px;
+  margin-bottom:10px;
+  opacity:0;
+  animation:sceneReveal 1s cubic-bezier(0.34,1.56,0.64,1) 0.5s forwards;
+}
+@keyframes sceneReveal{
+  from{opacity:0;transform:scale(0.8) translateY(30px)}
+  to{opacity:1;transform:scale(1) translateY(0)}
+}
+
+/* DOCTOR CHARACTER LEFT */
+.doctor-left{
+  position:absolute;
+  left:40px;bottom:0;
+  animation:doctorWalk 1.2s cubic-bezier(0.34,1.56,0.64,1) 0.8s both;
+}
+@keyframes doctorWalk{
+  from{opacity:0;transform:translateX(-80px)}
+  to{opacity:1;transform:translateX(0)}
+}
+
+/* PATIENT CHARACTER RIGHT */
+.patient-right{
+  position:absolute;
+  right:40px;bottom:0;
+  animation:patientWalk 1.2s cubic-bezier(0.34,1.56,0.64,1) 1s both;
+}
+@keyframes patientWalk{
+  from{opacity:0;transform:translateX(80px)}
+  to{opacity:1;transform:translateX(0)}
+}
+
+/* CENTER LOGO */
+.center-logo{
+  position:absolute;
+  left:50%;top:50%;
+  transform:translate(-50%,-50%);
+  display:flex;flex-direction:column;
+  align-items:center;gap:8px;
+  animation:logoZoom 1.5s cubic-bezier(0.34,1.56,0.64,1) 1.2s both;
+}
+@keyframes logoZoom{
+  from{opacity:0;transform:translate(-50%,-50%) scale(0.3) rotate(-10deg)}
+  to{opacity:1;transform:translate(-50%,-50%) scale(1) rotate(0deg)}
+}
+
+.logo-circle{
+  width:90px;height:90px;
+  border-radius:50%;
+  background:linear-gradient(135deg,#4f8ef7,#a855f7);
+  display:flex;align-items:center;justify-content:center;
+  font-size:42px;
+  box-shadow:0 0 40px rgba(79,142,247,0.5),0 0 80px rgba(168,85,247,0.3);
+  animation:logoPulse 2s ease infinite 2.5s;
+}
+@keyframes logoPulse{
+  0%,100%{box-shadow:0 0 40px rgba(79,142,247,0.5),0 0 80px rgba(168,85,247,0.3)}
+  50%{box-shadow:0 0 60px rgba(79,142,247,0.8),0 0 120px rgba(168,85,247,0.5)}
+}
+
+/* SPEECH BUBBLES */
+.bubble-left{
+  position:absolute;
+  left:200px;top:20px;
+  background:white;
+  border-radius:18px 18px 18px 4px;
+  padding:10px 16px;
+  font-size:13px;
+  color:#333;
+  box-shadow:0 4px 20px rgba(0,0,0,0.1);
+  opacity:0;
+  animation:bubblePop 0.5s cubic-bezier(0.34,1.56,0.64,1) 2s forwards;
+  white-space:nowrap;
+  border:1px solid rgba(79,142,247,0.2);
+  font-weight:500;
+}
+.bubble-left::after{
+  content:'';position:absolute;
+  bottom:-8px;left:16px;
+  border:8px solid transparent;
+  border-top-color:white;
+  border-bottom:0;
+}
+@keyframes bubblePop{
+  from{opacity:0;transform:scale(0.5)}
+  to{opacity:1;transform:scale(1)}
+}
+
+.bubble-right{
+  position:absolute;
+  right:200px;top:20px;
+  background:linear-gradient(135deg,#4f8ef7,#a855f7);
+  border-radius:18px 18px 4px 18px;
+  padding:10px 16px;
+  font-size:13px;
+  color:white;
+  box-shadow:0 4px 20px rgba(79,142,247,0.3);
+  opacity:0;
+  animation:bubblePop 0.5s cubic-bezier(0.34,1.56,0.64,1) 2.5s forwards;
+  white-space:nowrap;
+  font-weight:500;
+}
+.bubble-right::after{
+  content:'';position:absolute;
+  bottom:-8px;right:16px;
+  border:8px solid transparent;
+  border-top-color:#a855f7;
+  border-bottom:0;
+}
+
+/* CONNECTING LINE BETWEEN CHARACTERS */
+.connect-line{
+  position:absolute;
+  bottom:60px;left:200px;right:200px;height:3px;
+  background:linear-gradient(90deg,transparent,#4f8ef7,#a855f7,transparent);
+  opacity:0;
+  animation:lineGrow 1s ease 2.8s forwards;
+  border-radius:2px;
+}
+@keyframes lineGrow{
+  from{opacity:0;transform:scaleX(0)}
+  to{opacity:0.6;transform:scaleX(1)}
+}
+
+/* FLOATING PLUS SIGNS */
+.float-plus{
+  position:absolute;
+  color:#4f8ef7;
+  font-size:20px;
+  font-weight:900;
+  opacity:0;
+  animation:floatUp 1.5s ease infinite;
+}
+
+/* TITLE */
+.title-container{
+  text-align:center;
+  opacity:0;
+  animation:titleReveal 1s ease 1.5s forwards;
+  position:relative;
+}
+@keyframes titleReveal{
+  from{opacity:0;transform:translateY(20px)}
+  to{opacity:1;transform:translateY(0)}
+}
+
+.main-title{
+  font-family:'Orbitron',sans-serif;
+  font-size:52px;
+  font-weight:900;
+  background:linear-gradient(135deg,#1a237e,#4f8ef7,#a855f7,#e91e63);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  background-clip:text;
+  letter-spacing:4px;
+  position:relative;
+}
+
+.glitch{
+  animation:glitchEffect 0.3s ease 3s,glitchEffect 0.3s ease 4.5s,glitchEffect 0.3s ease 6s;
+}
+
+@keyframes glitchEffect{
+  0%{text-shadow:none}
+  20%{text-shadow:-3px 0 #e91e63, 3px 0 #4f8ef7;transform:translate(-2px,0)}
+  40%{text-shadow:3px 0 #a855f7, -3px 0 #10b981;transform:translate(2px,0)}
+  60%{text-shadow:-3px 0 #e91e63, 3px 0 #4f8ef7;transform:translate(-1px,0)}
+  80%{text-shadow:2px 0 #a855f7;transform:translate(1px,0)}
+  100%{text-shadow:none;transform:translate(0,0)}
+}
+
+.subtitle{
+  font-size:15px;
+  color:#5c6bc0;
+  letter-spacing:6px;
+  text-transform:uppercase;
+  margin-top:6px;
+  font-weight:300;
+}
+
+/* TAGLINE TYPING */
+.tagline{
+  font-size:16px;
+  color:#455a64;
+  margin-top:12px;
+  height:24px;
+  font-weight:400;
+  letter-spacing:1px;
+}
+
+.cursor{
+  display:inline-block;
+  width:2px;height:20px;
+  background:#4f8ef7;
+  margin-left:2px;
+  vertical-align:middle;
+  animation:blink 0.7s infinite;
+}
+@keyframes blink{0%,50%{opacity:1}51%,100%{opacity:0}}
+
+/* FEATURE PILLS */
+.features{
+  display:flex;gap:12px;margin-top:16px;
+  opacity:0;
+  animation:pillsReveal 0.8s ease 3.5s forwards;
+}
+@keyframes pillsReveal{
+  from{opacity:0;transform:translateY(15px)}
+  to{opacity:1;transform:translateY(0)}
+}
+
+.pill{
+  padding:6px 18px;
+  border-radius:20px;
+  font-size:12px;
+  font-weight:600;
+  letter-spacing:0.5px;
+  animation:pillGlow 2s ease infinite;
+}
+.pill:nth-child(1){background:rgba(79,142,247,0.15);color:#1565c0;border:1px solid rgba(79,142,247,0.3);animation-delay:0s}
+.pill:nth-child(2){background:rgba(168,85,247,0.15);color:#6a1b9a;border:1px solid rgba(168,85,247,0.3);animation-delay:0.3s}
+.pill:nth-child(3){background:rgba(16,185,129,0.15);color:#1b5e20;border:1px solid rgba(16,185,129,0.3);animation-delay:0.6s}
+.pill:nth-child(4){background:rgba(233,30,99,0.15);color:#880e4f;border:1px solid rgba(233,30,99,0.3);animation-delay:0.9s}
+
+@keyframes pillGlow{
+  0%,100%{box-shadow:none}
+  50%{box-shadow:0 0 12px currentColor}
+}
+
+/* PROGRESS BAR */
+.progress-container{
+  position:fixed;bottom:30px;left:50%;transform:translateX(-50%);
+  width:300px;
+  opacity:0;
+  animation:fadeIn 0.5s ease 1s forwards;
+  text-align:center;
+  z-index:20;
+}
+@keyframes fadeIn{to{opacity:1}}
+
+.progress-bar{
+  width:100%;height:3px;
+  background:rgba(79,142,247,0.2);
+  border-radius:2px;
+  overflow:hidden;
+  margin-bottom:8px;
+}
+.progress-fill{
+  height:100%;
+  background:linear-gradient(90deg,#4f8ef7,#a855f7,#e91e63);
+  border-radius:2px;
+  width:0%;
+  animation:fillBar 8s linear 0.5s forwards;
+  box-shadow:0 0 8px rgba(79,142,247,0.6);
+}
+@keyframes fillBar{to{width:100%}}
+
+.progress-text{
+  font-size:12px;
+  color:#78909c;
+  letter-spacing:2px;
+  text-transform:uppercase;
+}
+
+/* SKIP BUTTON */
+.skip-btn{
+  position:fixed;top:24px;right:24px;
+  padding:8px 20px;
+  background:rgba(255,255,255,0.7);
+  border:1px solid rgba(79,142,247,0.3);
+  border-radius:20px;
+  color:#5c6bc0;
+  font-size:13px;
+  font-weight:600;
+  cursor:pointer;
+  z-index:100;
+  backdrop-filter:blur(10px);
+  transition:all 0.2s;
+  font-family:'Inter',sans-serif;
+  animation:fadeIn 0.5s ease 1s both;
+}
+.skip-btn:hover{
+  background:linear-gradient(135deg,#4f8ef7,#a855f7);
+  color:white;border-color:transparent;
+  transform:scale(1.05);
+}
+
+/* FADE OUT */
+.fade-out{
+  animation:fadeOutAll 0.8s ease forwards !important;
+}
+@keyframes fadeOutAll{
+  to{opacity:0;transform:scale(1.05)}
+}
+
+/* SHINE EFFECT */
+.shine{
+  position:fixed;inset:0;
+  background:radial-gradient(circle at 50% 50%, rgba(255,255,255,0.8), transparent 60%);
+  opacity:0;z-index:50;pointer-events:none;
+}
+.shine.active{animation:shineFlash 0.5s ease forwards;}
+@keyframes shineFlash{
+  0%{opacity:0}50%{opacity:1}100%{opacity:0}
+}
+</style>
+</head>
+<body>
+
+<div class="bg"></div>
+<div class="shine" id="shine"></div>
+
+<!-- PARTICLES -->
+<div class="particles" id="particles"></div>
+
+<!-- SKIP BUTTON -->
+<button class="skip-btn" onclick="skipIntro()">Skip ⟶</button>
+
+<!-- MAIN INTRO -->
+<div class="intro-container" id="introContainer">
+
+  <!-- ANIME SCENE -->
+  <div class="anime-scene">
+
+    <!-- SPEECH BUBBLES -->
+    <div class="bubble-left">🩺 I'll help you feel better!</div>
+    <div class="bubble-right">💙 AI-powered care for you</div>
+
+    <!-- CONNECTING LINE -->
+    <div class="connect-line"></div>
+
+    <!-- FLOATING PLUS SIGNS -->
+    <div class="float-plus" style="left:30%;top:10%;animation-delay:3s;animation-duration:2s">+</div>
+    <div class="float-plus" style="left:65%;top:5%;animation-delay:3.5s;animation-duration:2.5s;color:#a855f7">✦</div>
+    <div class="float-plus" style="left:50%;top:15%;animation-delay:4s;animation-duration:2s;color:#e91e63;font-size:16px">❤</div>
+
+    <!-- DOCTOR CHARACTER (LEFT) -->
+    <div class="doctor-left">
+      <svg width="180" height="280" viewBox="0 0 180 280" fill="none">
+        <!-- Doctor Body -->
+        <defs>
+          <linearGradient id="coatGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#e3f2fd"/>
+            <stop offset="100%" stop-color="#bbdefb"/>
+          </linearGradient>
+          <linearGradient id="skinGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#ffccbc"/>
+            <stop offset="100%" stop-color="#ffab91"/>
+          </linearGradient>
+          <linearGradient id="hairGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#4a148c"/>
+            <stop offset="100%" stop-color="#7b1fa2"/>
+          </linearGradient>
+        </defs>
+
+        <!-- Shadow -->
+        <ellipse cx="90" cy="275" rx="55" ry="8" fill="rgba(0,0,0,0.08)"/>
+
+        <!-- Legs -->
+        <rect x="62" y="210" width="24" height="60" rx="12" fill="#1565c0"/>
+        <rect x="94" y="210" width="24" height="60" rx="12" fill="#1565c0"/>
+        <!-- Shoes -->
+        <ellipse cx="74" cy="270" rx="16" ry="8" fill="#212121"/>
+        <ellipse cx="106" cy="270" rx="16" ry="8" fill="#212121"/>
+
+        <!-- Doctor Coat Body -->
+        <rect x="45" y="130" width="90" height="85" rx="20" fill="url(#coatGrad)" stroke="#90caf9" stroke-width="1.5"/>
+
+        <!-- Coat Lapels -->
+        <path d="M90 135 L70 145 L75 185 L90 180 L105 185 L110 145 Z" fill="white" stroke="#90caf9" stroke-width="1"/>
+        <line x1="90" y1="145" x2="90" y2="185" stroke="#90caf9" stroke-width="1" stroke-dasharray="3 3"/>
+
+        <!-- Stethoscope -->
+        <path d="M70 155 Q55 165 58 178 Q61 191 72 191 Q83 191 83 180 Q83 172 76 170" stroke="#e91e63" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        <circle cx="76" cy="168" r="5" fill="#e91e63" opacity="0.8"/>
+        <circle cx="72" cy="192" r="6" fill="#e91e63" stroke="white" stroke-width="1.5"/>
+
+        <!-- Pocket + Cross -->
+        <rect x="93" y="150" width="28" height="20" rx="4" fill="white" stroke="#90caf9" stroke-width="1"/>
+        <text x="107" y="164" font-size="14" text-anchor="middle" fill="#e91e63" font-weight="bold">+</text>
+
+        <!-- Arms -->
+        <!-- Left arm raised (holding tablet) -->
+        <path d="M45 145 Q20 150 18 175 Q16 195 30 198" stroke="url(#coatGrad)" stroke-width="22" stroke-linecap="round" fill="none"/>
+        <path d="M45 145 Q20 150 18 175 Q16 195 30 198" stroke="#e3f2fd" stroke-width="18" stroke-linecap="round" fill="none"/>
+
+        <!-- Right arm -->
+        <path d="M135 145 Q158 155 160 175 Q162 192 148 195" stroke="url(#coatGrad)" stroke-width="22" stroke-linecap="round" fill="none"/>
+        <path d="M135 145 Q158 155 160 175 Q162 192 148 195" stroke="#e3f2fd" stroke-width="18" stroke-linecap="round" fill="none"/>
+
+        <!-- Left hand with tablet -->
+        <rect x="8" y="185" width="34" height="26" rx="5" fill="#424242"/>
+        <rect x="10" y="187" width="30" height="22" rx="4" fill="#4f8ef7" opacity="0.8"/>
+        <text x="25" y="201" font-size="8" text-anchor="middle" fill="white" font-weight="bold">AI+</text>
+
+        <!-- Right hand -->
+        <ellipse cx="148" cy="198" rx="10" ry="8" fill="url(#skinGrad)"/>
+
+        <!-- Neck -->
+        <rect x="80" y="110" width="20" height="25" rx="8" fill="url(#skinGrad)"/>
+
+        <!-- Head -->
+        <ellipse cx="90" cy="88" rx="38" ry="42" fill="url(#skinGrad)"/>
+
+        <!-- Hair -->
+        <path d="M52 80 Q55 45 90 42 Q125 45 128 80 Q120 55 90 52 Q60 55 52 80Z" fill="url(#hairGrad)"/>
+        <!-- Hair strands anime style -->
+        <path d="M52 75 Q48 60 55 50" stroke="#4a148c" stroke-width="3" fill="none" stroke-linecap="round"/>
+        <path d="M90 42 Q88 32 92 28 Q96 32 90 42" fill="#4a148c"/>
+        <path d="M105 48 Q112 38 118 42" stroke="#4a148c" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+
+        <!-- Face -->
+        <!-- Eyes - anime style large -->
+        <ellipse cx="74" cy="88" rx="11" ry="13" fill="white"/>
+        <ellipse cx="106" cy="88" rx="11" ry="13" fill="white"/>
+        <ellipse cx="74" cy="90" rx="8" ry="9" fill="#1565c0"/>
+        <ellipse cx="106" cy="90" rx="8" ry="9" fill="#1565c0"/>
+        <ellipse cx="74" cy="90" rx="5" ry="6" fill="#0d47a1"/>
+        <ellipse cx="106" cy="90" rx="5" ry="6" fill="#0d47a1"/>
+        <circle cx="76" cy="87" r="2.5" fill="white"/>
+        <circle cx="108" cy="87" r="2.5" fill="white"/>
+        <!-- Eyelashes -->
+        <path d="M63 80 Q68 75 74 78" stroke="#212121" stroke-width="1.5" fill="none"/>
+        <path d="M106 78 Q112 75 117 80" stroke="#212121" stroke-width="1.5" fill="none"/>
+        <!-- Eyebrows -->
+        <path d="M63 76 Q74 70 83 75" stroke="#4a148c" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        <path d="M97 75 Q106 70 117 76" stroke="#4a148c" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+
+        <!-- Blush -->
+        <ellipse cx="63" cy="98" rx="8" ry="5" fill="#ffcdd2" opacity="0.7"/>
+        <ellipse cx="117" cy="98" rx="8" ry="5" fill="#ffcdd2" opacity="0.7"/>
+
+        <!-- Smile -->
+        <path d="M78 106 Q90 116 102 106" stroke="#e91e63" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+
+        <!-- Nose -->
+        <path d="M88 97 Q90 102 92 97" stroke="#ffab91" stroke-width="1.5" fill="none"/>
+
+        <!-- Doctor badge -->
+        <rect x="60" y="135" width="36" height="16" rx="4" fill="#1565c0"/>
+        <text x="78" y="146" font-size="7" text-anchor="middle" fill="white" font-weight="bold">DOCTOR</text>
+
+        <!-- Floating hearts from doctor -->
+        <text x="155" y="100" font-size="16" fill="#e91e63" opacity="0.8">
+          <animate attributeName="opacity" values="0;1;0" dur="2s" repeatCount="indefinite" begin="3s"/>
+          <animate attributeName="transform" values="translate(0,0);translate(5,-20);translate(0,-40)" dur="2s" repeatCount="indefinite" begin="3s"/>
+          ❤
+        </text>
+      </svg>
+    </div>
+
+    <!-- PATIENT CHARACTER (RIGHT) -->
+    <div class="patient-right">
+      <svg width="160" height="280" viewBox="0 0 160 280" fill="none">
+        <defs>
+          <linearGradient id="patientSkin" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#ffe0b2"/>
+            <stop offset="100%" stop-color="#ffcc80"/>
+          </linearGradient>
+          <linearGradient id="shirtGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#f8bbd0"/>
+            <stop offset="100%" stop-color="#f48fb1"/>
+          </linearGradient>
+          <linearGradient id="hairGrad2" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#bf360c"/>
+            <stop offset="100%" stop-color="#e64a19"/>
+          </linearGradient>
+        </defs>
+
+        <!-- Shadow -->
+        <ellipse cx="80" cy="275" rx="50" ry="8" fill="rgba(0,0,0,0.08)"/>
+
+        <!-- Legs -->
+        <rect x="52" y="210" width="22" height="60" rx="11" fill="#4a148c"/>
+        <rect x="86" y="210" width="22" height="60" rx="11" fill="#4a148c"/>
+        <!-- Shoes -->
+        <ellipse cx="63" cy="270" rx="15" ry="8" fill="#212121"/>
+        <ellipse cx="97" cy="270" rx="15" ry="8" fill="#212121"/>
+
+        <!-- Body / Shirt -->
+        <rect x="40" y="130" width="80" height="85" rx="20" fill="url(#shirtGrad)" stroke="#f48fb1" stroke-width="1.5"/>
+
+        <!-- Shirt details -->
+        <path d="M80 135 L65 148 L68 185 L80 180 L92 185 L95 148 Z" fill="rgba(255,255,255,0.4)"/>
+
+        <!-- Bandage on arm (patient detail) -->
+        <rect x="28" y="165" width="22" height="10" rx="5" fill="white" stroke="#ffcc80" stroke-width="1"/>
+        <line x1="34" y1="165" x2="34" y2="175" stroke="#ffab91" stroke-width="1"/>
+        <line x1="38" y1="165" x2="38" y2="175" stroke="#ffab91" stroke-width="1"/>
+        <line x1="42" y1="165" x2="42" y2="175" stroke="#ffab91" stroke-width="1"/>
+
+        <!-- Arms -->
+        <path d="M40 148 Q18 158 15 178 Q13 195 28 198" stroke="url(#shirtGrad)" stroke-width="20" stroke-linecap="round" fill="none"/>
+        <path d="M40 148 Q18 158 15 178 Q13 195 28 198" stroke="#f8bbd0" stroke-width="16" stroke-linecap="round" fill="none"/>
+
+        <path d="M120 148 Q142 158 144 175 Q146 190 132 194" stroke="url(#shirtGrad)" stroke-width="20" stroke-linecap="round" fill="none"/>
+        <path d="M120 148 Q142 158 144 175 Q146 190 132 194" stroke="#f8bbd0" stroke-width="16" stroke-linecap="round" fill="none"/>
+
+        <!-- Hands -->
+        <ellipse cx="27" cy="200" rx="10" ry="8" fill="url(#patientSkin)"/>
+        <ellipse cx="133" cy="197" rx="10" ry="8" fill="url(#patientSkin)"/>
+
+        <!-- Neck -->
+        <rect x="70" y="110" width="20" height="25" rx="8" fill="url(#patientSkin)"/>
+
+        <!-- Head -->
+        <ellipse cx="80" cy="85" rx="36" ry="40" fill="url(#patientSkin)"/>
+
+        <!-- Hair - long anime style -->
+        <path d="M44 75 Q46 38 80 35 Q114 38 116 75 Q108 48 80 46 Q52 48 44 75Z" fill="url(#hairGrad2)"/>
+        <!-- Side hair strands -->
+        <path d="M44 72 Q38 90 42 115 Q46 125 52 128" stroke="#bf360c" stroke-width="8" stroke-linecap="round" fill="none"/>
+        <path d="M116 72 Q122 90 118 115 Q114 125 108 128" stroke="#bf360c" stroke-width="8" stroke-linecap="round" fill="none"/>
+        <!-- Hair highlights -->
+        <path d="M65 40 Q70 35 80 38" stroke="#ff7043" stroke-width="2" fill="none" opacity="0.6"/>
+        <!-- Hair accessory -->
+        <circle cx="58" cy="68" r="6" fill="#e91e63"/>
+        <circle cx="58" cy="68" r="3" fill="#f48fb1"/>
+
+        <!-- Face -->
+        <!-- Eyes - big anime -->
+        <ellipse cx="66" cy="85" rx="12" ry="14" fill="white"/>
+        <ellipse cx="94" cy="85" rx="12" ry="14" fill="white"/>
+        <ellipse cx="66" cy="87" rx="9" ry="10" fill="#7b1fa2"/>
+        <ellipse cx="94" cy="87" rx="9" ry="10" fill="#7b1fa2"/>
+        <ellipse cx="66" cy="87" rx="6" ry="7" fill="#4a148c"/>
+        <ellipse cx="94" cy="87" rx="6" ry="7" fill="#4a148c"/>
+        <circle cx="68" cy="83" r="3" fill="white"/>
+        <circle cx="96" cy="83" r="3" fill="white"/>
+        <!-- Sparkle in eyes -->
+        <circle cx="60" cy="91" r="1.5" fill="white" opacity="0.8"/>
+        <circle cx="88" cy="91" r="1.5" fill="white" opacity="0.8"/>
+        <!-- Eyelashes -->
+        <path d="M54 76 Q60 70 66 74" stroke="#212121" stroke-width="1.5" fill="none"/>
+        <path d="M94 74 Q100 70 106 76" stroke="#212121" stroke-width="1.5" fill="none"/>
+        <!-- Eyebrows - arched anime -->
+        <path d="M54 71 Q66 64 76 70" stroke="#bf360c" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        <path d="M84 70 Q94 64 106 71" stroke="#bf360c" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+
+        <!-- Blush larger anime style -->
+        <ellipse cx="54" cy="96" rx="10" ry="6" fill="#ffcdd2" opacity="0.8"/>
+        <ellipse cx="106" cy="96" rx="10" ry="6" fill="#ffcdd2" opacity="0.8"/>
+
+        <!-- Happy smile -->
+        <path d="M68 104 Q80 116 92 104" stroke="#e91e63" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        <!-- Teeth -->
+        <path d="M70 107 Q80 115 90 107" fill="white" opacity="0.7"/>
+
+        <!-- Nose -->
+        <path d="M78 95 Q80 100 82 95" stroke="#ffab91" stroke-width="1.5" fill="none"/>
+
+        <!-- Sparkles around patient -->
+        <text x="130" y="75" font-size="14" fill="#f59e0b" opacity="0">✨
+          <animate attributeName="opacity" values="0;1;0" dur="1.5s" repeatCount="indefinite" begin="3.5s"/>
+        </text>
+        <text x="5" y="140" font-size="12" fill="#a855f7" opacity="0">⭐
+          <animate attributeName="opacity" values="0;1;0" dur="2s" repeatCount="indefinite" begin="4s"/>
+        </text>
+      </svg>
+    </div>
+
+    <!-- CENTER LOGO -->
+    <div class="center-logo">
+      <div class="logo-circle">+</div>
+      <div style="font-family:'Orbitron',sans-serif;font-size:11px;color:#5c6bc0;letter-spacing:3px;font-weight:700">HEALTH AI</div>
+    </div>
+
+  </div>
+  <!-- END ANIME SCENE -->
+
+  <!-- TITLE -->
+  <div class="title-container">
+    <div class="main-title glitch">HealthAI Pro</div>
+    <div class="subtitle">Intelligent Medical Platform</div>
+    <div class="tagline"><span id="typingText"></span><span class="cursor"></span></div>
+    <div class="features">
+      <div class="pill">🤖 AI Diagnosis</div>
+      <div class="pill">👨‍⚕️ Real Doctors</div>
+      <div class="pill">💊 Medicine Store</div>
+      <div class="pill">🔒 Secure Health Data</div>
+    </div>
+  </div>
+
+</div>
+<!-- END INTRO CONTAINER -->
+
+<!-- HEARTBEAT LINE -->
+<div class="heartbeat-container">
+  <svg class="heartbeat-svg" viewBox="0 0 600 80">
+    <defs>
+      <linearGradient id="heartGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stop-color="#4f8ef7" stop-opacity="0"/>
+        <stop offset="30%" stop-color="#4f8ef7"/>
+        <stop offset="50%" stop-color="#e91e63"/>
+        <stop offset="70%" stop-color="#a855f7"/>
+        <stop offset="100%" stop-color="#a855f7" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+    <path class="heartbeat-path"
+      d="M0,40 L80,40 L100,40 L115,10 L130,70 L145,25 L155,55 L165,40 L200,40 L220,40 L235,8 L250,72 L265,22 L275,58 L285,40 L320,40 L340,40 L355,12 L370,68 L385,20 L395,60 L405,40 L440,40 L460,40 L475,15 L490,65 L505,28 L515,52 L525,40 L600,40"
+    />
+  </svg>
+</div>
+
+<!-- PROGRESS BAR -->
+<div class="progress-container">
+  <div class="progress-bar">
+    <div class="progress-fill"></div>
+  </div>
+  <div class="progress-text">Loading HealthAI Pro...</div>
+</div>
+
+<script>
+// TYPING EFFECT
+const taglines = [
+  "AI-powered healthcare for everyone",
+  "Smart diagnosis at your fingertips",
+  "Connecting patients with doctors",
+  "Your health, our priority"
+];
+let taglineIndex = 0;
+let charIndex = 0;
+let isDeleting = false;
+let typingStarted = false;
+
+setTimeout(() => {
+  typingStarted = true;
+  typeText();
+}, 2000);
+
+function typeText() {
+  if (!typingStarted) return;
+  const current = taglines[taglineIndex];
+  const el = document.getElementById('typingText');
+  if (!el) return;
+
+  if (!isDeleting) {
+    el.textContent = current.slice(0, charIndex + 1);
+    charIndex++;
+    if (charIndex === current.length) {
+      isDeleting = true;
+      setTimeout(typeText, 1800);
+      return;
+    }
+  } else {
+    el.textContent = current.slice(0, charIndex - 1);
+    charIndex--;
+    if (charIndex === 0) {
+      isDeleting = false;
+      taglineIndex = (taglineIndex + 1) % taglines.length;
+    }
+  }
+  setTimeout(typeText, isDeleting ? 40 : 65);
+}
+
+// FLOATING PARTICLES
+const particleEmojis = ['💊','🧬','❤️','🩺','⚕️','🔬','💉','🩻','🫀','🧪','✦','+','○'];
+const container = document.getElementById('particles');
+
+for (let i = 0; i < 28; i++) {
+  const p = document.createElement('div');
+  p.className = 'particle';
+  p.textContent = particleEmojis[Math.floor(Math.random() * particleEmojis.length)];
+  p.style.left = Math.random() * 100 + 'vw';
+  p.style.fontSize = (14 + Math.random() * 20) + 'px';
+  p.style.animationDuration = (6 + Math.random() * 8) + 's';
+  p.style.animationDelay = (Math.random() * 6) + 's';
+  p.style.opacity = '0';
+  container.appendChild(p);
+}
+
+// AUTO REDIRECT
+let redirectTimer = setTimeout(goToLogin, 8000);
+
+function goToLogin() {
+  clearTimeout(redirectTimer);
+  const shine = document.getElementById('shine');
+  shine.classList.add('active');
+  const intro = document.getElementById('introContainer');
+  intro.classList.add('fade-out');
+  document.querySelector('.heartbeat-container').classList.add('fade-out');
+  document.querySelector('.progress-container').classList.add('fade-out');
+  setTimeout(() => {
+    window.location.href = '/login';
+  }, 800);
+}
+
+function skipIntro() {
+  clearTimeout(redirectTimer);
+  goToLogin();
+}
+</script>
+</body>
+</html>
