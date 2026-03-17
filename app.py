@@ -794,6 +794,8 @@ def generate_report():
     })
 
 if __name__ == '__main__':
+    import os
+    app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'healthai_secret_2024_ruban_dev')
     with app.app_context():
         db.create_all()
         # Seed medicines if empty
