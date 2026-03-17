@@ -17,6 +17,10 @@ db = SQLAlchemy(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login_page'
 
+with app.app_context():
+    db.create_all()
+    # If you have a function to seed the database (like seeding admin accounts), call it here too.
+
 # ─── MODELS ───────────────────────────────────────────────
 class User(UserMixin, db.Model):
     id           = db.Column(db.Integer, primary_key=True)
