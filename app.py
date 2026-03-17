@@ -8,7 +8,8 @@ import pickle, numpy as np, os, json
 
 app = Flask(__name__)
 app.secret_key = 'healthai_secret_2024_ruban_dev'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///healthai.db'
+basedir = os.path.abspath(os.path.dirname(__file__))
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'healthai.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 CORS(app)
