@@ -831,16 +831,128 @@ def blood_donors():
 @app.route('/api/health-news')
 def health_news():
     news = [
-        {'title':'WHO reports decline in global malaria cases in 2024','source':'WHO','time':'2h ago','category':'Global Health','color':'#4f8ef7'},
-        {'title':'New AI model predicts diabetes risk with 94% accuracy','source':'Nature Medicine','time':'4h ago','category':'AI & Health','color':'#a855f7'},
-        {'title':'Study links daily walking to 30% lower heart disease risk','source':'Lancet','time':'6h ago','category':'Cardiology','color':'#10b981'},
-        {'title':'India launches new nationwide vaccination drive for 2025','source':'Health Ministry','time':'8h ago','category':'Vaccination','color':'#f59e0b'},
-        {'title':'Breakthrough in Alzheimer treatment shows promising results','source':'NEJM','time':'12h ago','category':'Neurology','color':'#ef4444'},
-        {'title':'Mental health apps usage surges 45% post pandemic','source':'JAMA','time':'1d ago','category':'Mental Health','color':'#ec4899'},
-        {'title':'New antibiotic discovered after 30 years of research','source':'Science','time':'1d ago','category':'Antibiotics','color':'#06b6d4'},
-        {'title':'Exercise reduces depression risk by 43% says new study','source':'BMJ','time':'2d ago','category':'Mental Health','color':'#10b981'},
+        {
+            'title': 'WHO reports significant decline in global malaria cases in 2024',
+            'source': 'WHO',
+            'time': '2h ago',
+            'category': 'Global Health',
+            'color': '#4f8ef7',
+            'summary': 'The World Health Organization reports a 15% reduction in malaria deaths globally, attributed to improved prevention and treatment programs across sub-Saharan Africa.',
+            'url': 'https://www.who.int/news-room/fact-sheets/detail/malaria',
+            'read_time': '3 min read'
+        },
+        {
+            'title': 'New AI model predicts diabetes risk with 94% accuracy',
+            'source': 'Nature Medicine',
+            'time': '4h ago',
+            'category': 'AI & Health',
+            'color': '#a855f7',
+            'summary': 'Researchers at Stanford developed a machine learning model that predicts Type 2 diabetes up to 5 years before onset using routine blood test data.',
+            'url': 'https://www.nature.com/nm/',
+            'read_time': '5 min read'
+        },
+        {
+            'title': 'Study links daily 30-minute walking to 30% lower heart disease risk',
+            'source': 'The Lancet',
+            'time': '6h ago',
+            'category': 'Cardiology',
+            'color': '#10b981',
+            'summary': 'A large-scale study following 85,000 adults over 10 years found that consistent moderate exercise dramatically reduces cardiovascular disease risk.',
+            'url': 'https://www.thelancet.com',
+            'read_time': '4 min read'
+        },
+        {
+            'title': 'India launches nationwide vaccination drive targeting 300 million people',
+            'source': 'Ministry of Health',
+            'time': '8h ago',
+            'category': 'Vaccination',
+            'color': '#f59e0b',
+            'summary': 'India\'s largest immunization campaign targets rural populations with new pneumococcal and rotavirus vaccines, aiming to reduce child mortality by 40%.',
+            'url': 'https://www.mohfw.gov.in',
+            'read_time': '3 min read'
+        },
+        {
+            'title': 'Breakthrough Alzheimer\'s drug shows 35% cognitive decline reduction',
+            'source': 'NEJM',
+            'time': '12h ago',
+            'category': 'Neurology',
+            'color': '#ef4444',
+            'summary': 'A Phase 3 clinical trial of lecanemab demonstrates unprecedented results in slowing Alzheimer\'s progression in early-stage patients.',
+            'url': 'https://www.nejm.org',
+            'read_time': '6 min read'
+        },
+        {
+            'title': 'Mental health app usage surges 45% globally post-pandemic',
+            'source': 'JAMA Psychiatry',
+            'time': '1d ago',
+            'category': 'Mental Health',
+            'color': '#ec4899',
+            'summary': 'Digital mental health tools have become mainstream, with anxiety and depression apps showing clinical efficacy comparable to traditional therapy in mild cases.',
+            'url': 'https://jamanetwork.com/journals/jamapsychiatry',
+            'read_time': '4 min read'
+        },
+        {
+            'title': 'First new antibiotic class discovered in over 30 years',
+            'source': 'Science Journal',
+            'time': '1d ago',
+            'category': 'Antibiotics',
+            'color': '#06b6d4',
+            'summary': 'Scientists discovered clovibactin, a new antibiotic that kills drug-resistant bacteria using a novel mechanism, offering hope against superbugs.',
+            'url': 'https://www.science.org',
+            'read_time': '5 min read'
+        },
+        {
+            'title': 'Exercise reduces depression risk by 43%, largest study confirms',
+            'source': 'BMJ',
+            'time': '2d ago',
+            'category': 'Mental Health',
+            'color': '#10b981',
+            'summary': 'Meta-analysis of 97 studies covering 128,000 participants confirms physical activity as one of the most effective interventions for preventing depression.',
+            'url': 'https://www.bmj.com',
+            'read_time': '4 min read'
+        },
+        {
+            'title': 'mRNA vaccine technology shows promise against cancer tumors',
+            'source': 'Nature',
+            'time': '2d ago',
+            'category': 'Cancer Research',
+            'color': '#f59e0b',
+            'summary': 'Building on COVID-19 vaccine success, personalized mRNA cancer vaccines show 50% reduction in tumor recurrence in melanoma patients.',
+            'url': 'https://www.nature.com',
+            'read_time': '6 min read'
+        },
+        {
+            'title': 'WHO declares global obesity crisis — 1 billion people affected',
+            'source': 'WHO',
+            'time': '3d ago',
+            'category': 'Global Health',
+            'color': '#4f8ef7',
+            'summary': 'For the first time in history, more people globally are obese than underweight. WHO calls for urgent policy changes in food systems and urban planning.',
+            'url': 'https://www.who.int/news-room/fact-sheets/detail/obesity-and-overweight',
+            'read_time': '4 min read'
+        },
+        {
+            'title': 'Sleep deprivation linked to 48% higher dementia risk',
+            'source': 'Nature Aging',
+            'time': '3d ago',
+            'category': 'Neurology',
+            'color': '#ef4444',
+            'summary': 'A 25-year longitudinal study found consistently sleeping less than 6 hours per night significantly increases Alzheimer\'s and vascular dementia risk.',
+            'url': 'https://www.nature.com/nataging/',
+            'read_time': '3 min read'
+        },
+        {
+            'title': 'India records lowest maternal mortality rate in history',
+            'source': 'ICMR',
+            'time': '4d ago',
+            'category': 'Public Health',
+            'color': '#10b981',
+            'summary': 'India\'s maternal mortality ratio dropped to 97 per 100,000 live births, a 70% improvement over the past two decades driven by rural healthcare expansion.',
+            'url': 'https://www.icmr.gov.in',
+            'read_time': '3 min read'
+        },
     ]
-    return jsonify({'news':news})
+    return jsonify({'news': news})
 
 @app.route('/api/video-call', methods=['POST'])
 @login_required

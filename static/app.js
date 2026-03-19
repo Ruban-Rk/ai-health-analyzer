@@ -404,44 +404,102 @@ async function calculateBMI() {
   const weight = document.getElementById('bmiWeight')?.value;
   const height = document.getElementById('bmiHeight')?.value;
   if(!weight || !height) { showToast('Enter both weight and height','error'); return; }
-  const res = await fetch('/api/bmi', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({weight, height})});
-  const data = await res.json();
-  const result = document.getElementById('bmiResult');
-  if(!result) return;
-  result.style.display = 'block';
-  result.style.background = data.color + '15';
-  result.style.border = `1px solid ${data.color}40`;
-  result.innerHTML = `
-    <div class="bmi-number" style="color:${data.color}">${data.bmi}</div>
-    <div class="bmi-label" style="color:${data.color}">${data.category}</div>
-    <div style="font-size:13px;color:var(--muted);margin-top:8px">${data.advice}</div>
-    <div style="margin-top:16px;height:8px;background:var(--bg3);border-radius:4px;overflow:hidden">
-      <div style="height:100%;width:${Math.min(data.bmi/40*100,100)}%;background:${data.color};border-radius:4px;transition:width 1s ease"></div>
-    </div>
-    <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:4px">
-      <span>Underweight</span><span>Normal</span><span>Overweight</span><span>Obese</span>
-    </div>
-  `;
+  if(weight <= 0 || height <= 0) { showToast('Please enter valid values','error'); return; }
+  try {
+    const res = await fetch('/api/bmi', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({weight:parseFloat(weight), height:parseFloat(height)})
+    });
+    const data = await res.json();
+    const result = document.getElementById('bmiResult');
+    if(!result) return;
+    result.style.display = 'block';
+    result.style.background = data.color + '15';
+    result.style.border = `1px solid ${data.color}40`;
+    result.innerHTML = `
+      <div class="bmi-number" style="color:${data.color}">${data.bmi}</div>
+      <div class="bmi-label" style="color:${data.color}">${data.category}</div>
+      <div style="font-size:13px;color:var(--muted);margin-top:8px">${data.advice}</div>
+      <div style="margin-top:16px;height:8px;background:var(--bg3);border-radius:4px;overflow:hidden">
+        <div style="height:100%;width:${Math.min(data.bmi/40*100,100)}%;background:${data.color};border-radius:4px;transition:width 1s ease"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:4px">
+        <span>Underweight</span><span>Normal</span><span>Overweight</span><span>Obese</span>
+      </div>
+    `;
+    showToast('BMI calculated!','success');
+  } catch(e) {
+    showToast('Error calculating BMI. Try again.','error');
+    console.error(e);
+  }
 }
 
 // HEALTH NEWS
 async function loadHealthNews() {
   const container = document.getElementById('newsFeed');
   if(!container) return;
-  const res = await fetch('/api/health-news');
-  const data = await res.json();
-  container.innerHTML = data.news.map(n=>`
-    <div style="padding:16px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:12px;display:flex;gap:14px;align-items:flex-start;transition:all 0.2s;cursor:pointer" onmouseover="this.style.borderColor='rgba(79,142,247,0.3)'" onmouseout="this.style.borderColor='var(--border)'">
-      <div style="width:4px;height:100%;min-height:50px;background:${n.color};border-radius:4px;flex-shrink:0"></div>
-      <div style="flex:1">
-        <div style="font-size:14px;font-weight:600;margin-bottom:5px;line-height:1.4">${n.title}</div>
-        <div style="display:flex;gap:10px;align-items:center">
-          <span style="font-size:11px;padding:2px 10px;border-radius:20px;background:${n.color}15;color:${n.color};font-weight:600">${n.category}</span>
-          <span style="font-size:12px;color:var(--muted)">${n.source}</span>
-          <span style="font-size:12px;color:var(--muted)">${n.time}</span>
+
+  container.innerHTML = `<div style="color:var(--muted);font-size:14px;padding:20px 0">Loading latest health news...</div>`;
+
+  try {
+    const res = await fetch('/api/health-news');
+    const data = await res.json();
+
+    const categories = ['All', ...new Set(data.news.map(n => n.category))];
+    let activeCategory = 'All';
+
+    function renderNews(filter) {
+      const filtered = filter === 'All' ? data.news : data.news.filter(n => n.category === filter);
+      return filtered.map(n => `
+        <div class="news-card" onclick="window.open('${n.url}','_blank')" style="cursor:pointer">
+          <div class="news-color-bar" style="background:${n.color}"></div>
+          <div class="news-body">
+            <div class="news-meta">
+              <span class="news-category-badge" style="background:${n.color}18;color:${n.color};border:1px solid ${n.color}30">${n.category}</span>
+              <span class="news-source">📰 ${n.source}</span>
+              <span class="news-time">🕐 ${n.time}</span>
+              <span class="news-read-time">📖 ${n.read_time}</span>
+            </div>
+            <div class="news-title">${n.title}</div>
+            <div class="news-summary">${n.summary}</div>
+            <div class="news-footer">
+              <span class="news-link" style="color:${n.color}">Read full article → ${n.source}</span>
+            </div>
+          </div>
         </div>
+      `).join('');
+    }
+
+    container.innerHTML = `
+      <div class="news-filter-bar">
+        ${categories.map(c => `
+          <button class="news-filter-btn ${c==='All'?'active':''}"
+            style="${c==='All'?'background:linear-gradient(135deg,#4f8ef7,#a855f7);color:#fff;border-color:transparent':''}"
+            onclick="filterNews('${c}', this)">
+            ${c}
+          </button>`).join('')}
       </div>
-    </div>`).join('');
+      <div id="newsGrid">${renderNews('All')}</div>
+    `;
+
+    window.filterNews = function(category, btn) {
+      document.querySelectorAll('.news-filter-btn').forEach(b => {
+        b.style.background = 'var(--glass)';
+        b.style.color = 'var(--muted)';
+        b.style.borderColor = 'var(--glass-border)';
+        b.classList.remove('active');
+      });
+      btn.style.background = 'linear-gradient(135deg,#4f8ef7,#a855f7)';
+      btn.style.color = '#fff';
+      btn.style.borderColor = 'transparent';
+      btn.classList.add('active');
+      document.getElementById('newsGrid').innerHTML = renderNews(category);
+    };
+
+  } catch(e) {
+    container.innerHTML = `<div style="color:var(--muted);font-size:14px;padding:20px">Could not load news. Please try again.</div>`;
+  }
 }
 
 // BLOOD DONOR FINDER
