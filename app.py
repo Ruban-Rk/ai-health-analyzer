@@ -7,7 +7,7 @@ from datetime import datetime
 import pickle, numpy as np, os, json
 
 app = Flask(__name__)
-app.secret_key = 'healthai_secret_2024_ruban_dev'
+app.secret_key = os.environ.get('SECRET_KEY', 'healthai_secret_2024_ruban_dev')
 basedir = os.path.abspath(os.path.dirname(__file__))
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'healthai.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -17,29 +17,25 @@ db = SQLAlchemy(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login_page'
 
-with app.app_context():
-    db.create_all()
-    # If you have a function to seed the database (like seeding admin accounts), call it here too.
-
 # ─── MODELS ───────────────────────────────────────────────
 class User(UserMixin, db.Model):
-    id           = db.Column(db.Integer, primary_key=True)
-    name         = db.Column(db.String(100), nullable=False)
-    email        = db.Column(db.String(120), unique=True, nullable=False)
-    password     = db.Column(db.String(200), nullable=False)
-    role         = db.Column(db.String(20), default='user')
-    avatar       = db.Column(db.String(10), default='U')
-    phone        = db.Column(db.String(20), default='')
-    blood_group  = db.Column(db.String(5), default='')
-    age          = db.Column(db.Integer, default=0)
-    address      = db.Column(db.String(200), default='')
-    bio          = db.Column(db.String(300), default='')
+    id             = db.Column(db.Integer, primary_key=True)
+    name           = db.Column(db.String(100), nullable=False)
+    email          = db.Column(db.String(120), unique=True, nullable=False)
+    password       = db.Column(db.String(200), nullable=False)
+    role           = db.Column(db.String(20), default='user')
+    avatar         = db.Column(db.String(10), default='U')
+    phone          = db.Column(db.String(20), default='')
+    blood_group    = db.Column(db.String(5), default='')
+    age            = db.Column(db.Integer, default=0)
+    address        = db.Column(db.String(200), default='')
+    bio            = db.Column(db.String(300), default='')
     specialization = db.Column(db.String(100), default='')
-    experience   = db.Column(db.String(50), default='')
-    is_banned    = db.Column(db.Boolean, default=False)
+    experience     = db.Column(db.String(50), default='')
+    is_banned      = db.Column(db.Boolean, default=False)
     is_active_user = db.Column(db.Boolean, default=True)
-    created_at   = db.Column(db.DateTime, default=datetime.utcnow)
-    last_login   = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at     = db.Column(db.DateTime, default=datetime.utcnow)
+    last_login     = db.Column(db.DateTime, default=datetime.utcnow)
 
 class Appointment(db.Model):
     id           = db.Column(db.Integer, primary_key=True)
@@ -68,13 +64,13 @@ class Prescription(db.Model):
     created_at   = db.Column(db.DateTime, default=datetime.utcnow)
 
 class Message(db.Model):
-    id           = db.Column(db.Integer, primary_key=True)
-    sender_id    = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    receiver_id  = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    sender_name  = db.Column(db.String(100))
-    content      = db.Column(db.Text)
-    read         = db.Column(db.Boolean, default=False)
-    created_at   = db.Column(db.DateTime, default=datetime.utcnow)
+    id          = db.Column(db.Integer, primary_key=True)
+    sender_id   = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    receiver_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    sender_name = db.Column(db.String(100))
+    content     = db.Column(db.Text)
+    read        = db.Column(db.Boolean, default=False)
+    created_at  = db.Column(db.DateTime, default=datetime.utcnow)
 
 class Order(db.Model):
     id           = db.Column(db.Integer, primary_key=True)
@@ -86,26 +82,73 @@ class Order(db.Model):
     created_at   = db.Column(db.DateTime, default=datetime.utcnow)
 
 class HealthRecord(db.Model):
-    id           = db.Column(db.Integer, primary_key=True)
-    user_id      = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    symptoms     = db.Column(db.Text)
-    diagnosis    = db.Column(db.String(100))
-    confidence   = db.Column(db.Float)
-    created_at   = db.Column(db.DateTime, default=datetime.utcnow)
+    id         = db.Column(db.Integer, primary_key=True)
+    user_id    = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    symptoms   = db.Column(db.Text)
+    diagnosis  = db.Column(db.String(100))
+    confidence = db.Column(db.Float)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 class Medicine(db.Model):
-    id           = db.Column(db.Integer, primary_key=True)
-    name         = db.Column(db.String(100))
-    category     = db.Column(db.String(50))
-    price        = db.Column(db.Float)
-    stock        = db.Column(db.Integer, default=100)
-    img          = db.Column(db.String(10), default='💊')
-    desc         = db.Column(db.String(200))
-    active       = db.Column(db.Boolean, default=True)
+    id       = db.Column(db.Integer, primary_key=True)
+    name     = db.Column(db.String(100))
+    category = db.Column(db.String(50))
+    price    = db.Column(db.Float)
+    stock    = db.Column(db.Integer, default=100)
+    img      = db.Column(db.String(10), default='💊')
+    desc     = db.Column(db.String(200))
+    active   = db.Column(db.Boolean, default=True)
 
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
+
+# ─── SEED DATABASE ────────────────────────────────────────
+def seed_database():
+    if Medicine.query.count() == 0:
+        medicines = [
+            Medicine(name='Paracetamol 500mg',category='Pain Relief',price=45,stock=150,img='💊',desc='For fever and mild pain relief'),
+            Medicine(name='Cetirizine 10mg',category='Allergy',price=65,stock=80,img='💊',desc='Antihistamine for allergy symptoms'),
+            Medicine(name='Amoxicillin 250mg',category='Antibiotic',price=120,stock=60,img='💊',desc='Broad spectrum antibiotic'),
+            Medicine(name='Ibuprofen 400mg',category='Pain Relief',price=55,stock=200,img='💊',desc='Anti-inflammatory pain relief'),
+            Medicine(name='Vitamin C 1000mg',category='Supplement',price=180,stock=300,img='🍊',desc='Immune system support'),
+            Medicine(name='Omeprazole 20mg',category='Gastric',price=95,stock=120,img='💊',desc='Acid reflux and gastric issues'),
+            Medicine(name='Metformin 500mg',category='Diabetes',price=75,stock=90,img='💊',desc='Blood sugar management'),
+            Medicine(name='Atorvastatin 10mg',category='Cardiac',price=140,stock=75,img='❤️',desc='Cholesterol management'),
+            Medicine(name='Zinc + Vitamin D',category='Supplement',price=220,stock=250,img='✨',desc='Immunity and bone health'),
+            Medicine(name='Cough Syrup 100ml',category='Respiratory',price=85,stock=110,img='🍶',desc='Dry and wet cough relief'),
+            Medicine(name='Eye Drops 10ml',category='Eye Care',price=65,stock=95,img='👁️',desc='Dry eye and irritation relief'),
+            Medicine(name='Antacid Tablets',category='Gastric',price=40,stock=400,img='💊',desc='Instant acidity relief'),
+        ]
+        for m in medicines:
+            db.session.add(m)
+
+    accounts = [
+        ('Admin','admin@healthai.com','admin123','admin','A'),
+        ('Dr. Priya Sharma','priya@healthai.com','doctor123','doctor','P'),
+        ('Dr. Arjun Mehta','arjun@healthai.com','doctor123','doctor','A'),
+        ('Dr. Sneha Rao','sneha@healthai.com','doctor123','doctor','S'),
+        ('Test Patient','user@healthai.com','user123','user','T'),
+        ('Dev Portal','dev@healthai.com','dev123secure','developer','D'),
+    ]
+    for name, email, pwd, role, av in accounts:
+        if not User.query.filter_by(email=email).first():
+            u = User(
+                name=name, email=email,
+                password=generate_password_hash(pwd),
+                role=role, avatar=av
+            )
+            if role == 'doctor':
+                u.specialization = 'General Physician'
+                u.experience = '10 yrs'
+            db.session.add(u)
+    db.session.commit()
+    print("✅ DB seeded!")
+
+# ─── THIS RUNS ON GUNICORN TOO ────────────────────────────
+with app.app_context():
+    db.create_all()
+    seed_database()
 
 # ─── ML MODEL ─────────────────────────────────────────────
 with open('model/model.pkl','rb') as f: ml_model = pickle.load(f)
@@ -240,14 +283,14 @@ def get_current_user():
 @login_required
 def update_profile():
     data = request.get_json()
-    current_user.name    = data.get('name', current_user.name)
-    current_user.phone   = data.get('phone', current_user.phone)
-    current_user.age     = data.get('age', current_user.age)
-    current_user.blood_group = data.get('blood_group', current_user.blood_group)
-    current_user.address = data.get('address', current_user.address)
-    current_user.bio     = data.get('bio', current_user.bio)
+    current_user.name         = data.get('name', current_user.name)
+    current_user.phone        = data.get('phone', current_user.phone)
+    current_user.age          = data.get('age', current_user.age)
+    current_user.blood_group  = data.get('blood_group', current_user.blood_group)
+    current_user.address      = data.get('address', current_user.address)
+    current_user.bio          = data.get('bio', current_user.bio)
     current_user.specialization = data.get('specialization', current_user.specialization)
-    current_user.experience = data.get('experience', current_user.experience)
+    current_user.experience   = data.get('experience', current_user.experience)
     db.session.commit()
     return jsonify({'message':'Profile updated!'})
 
@@ -286,7 +329,9 @@ def get_messages(other_id):
         ((Message.sender_id==current_user.id) & (Message.receiver_id==other_id)) |
         ((Message.sender_id==other_id) & (Message.receiver_id==current_user.id))
     ).order_by(Message.created_at.asc()).all()
-    Message.query.filter_by(receiver_id=current_user.id, sender_id=other_id, read=False).update({'read':True})
+    Message.query.filter_by(
+        receiver_id=current_user.id, sender_id=other_id, read=False
+    ).update({'read':True})
     db.session.commit()
     return jsonify({'messages':[{
         'id':m.id, 'sender_id':m.sender_id, 'sender_name':m.sender_name,
@@ -300,7 +345,8 @@ def get_contacts():
     if current_user.role in ['admin','developer']:
         users = User.query.filter(User.id != current_user.id).all()
     elif current_user.role == 'doctor':
-        patient_ids = db.session.query(Appointment.patient_id).filter_by(doctor_name=current_user.name).distinct()
+        patient_ids = db.session.query(Appointment.patient_id).filter_by(
+            doctor_name=current_user.name).distinct()
         users = User.query.filter(User.id.in_(patient_ids)).all()
         admins = User.query.filter_by(role='admin').all()
         users = list(users) + admins
@@ -310,22 +356,24 @@ def get_contacts():
         users = list(doctor_users) + admins
     return jsonify({'contacts':[{
         'id':u.id, 'name':u.name, 'role':u.role, 'avatar':u.avatar,
-        'unread': Message.query.filter_by(sender_id=u.id, receiver_id=current_user.id, read=False).count()
+        'unread': Message.query.filter_by(
+            sender_id=u.id, receiver_id=current_user.id, read=False).count()
     } for u in users]})
 
 # ─── SYMPTOM / ML APIs ────────────────────────────────────
 @app.route('/api/predict', methods=['POST'])
 @login_required
 def predict():
-    data = request.get_json()
+    data     = request.get_json()
     symptoms = data.get('symptoms',{})
     features = np.array([[int(symptoms.get(s,0)) for s in SYMPTOM_KEYS]])
     pred_enc   = ml_model.predict(features)[0]
     probs      = ml_model.predict_proba(features)[0]
     disease    = le.inverse_transform([pred_enc])[0]
     confidence = round(float(max(probs))*100,1)
-    all_probs  = {le.inverse_transform([i])[0]: round(float(p)*100,1) for i,p in enumerate(probs)}
-    info = DISEASE_INFO.get(disease,{})
+    all_probs  = {le.inverse_transform([i])[0]: round(float(p)*100,1)
+                  for i,p in enumerate(probs)}
+    info   = DISEASE_INFO.get(disease,{})
     record = HealthRecord(user_id=current_user.id, symptoms=str(symptoms),
                           diagnosis=disease, confidence=confidence)
     db.session.add(record)
@@ -337,9 +385,11 @@ def predict():
 @app.route('/api/stats')
 def stats():
     return jsonify({
-        'symptom_frequency':{'Fever':65,'Cough':58,'Headache':45,'Fatigue':72,'Sore Throat':38,'Body Ache':41,'Nausea':33,'Runny Nose':29},
+        'symptom_frequency':{'Fever':65,'Cough':58,'Headache':45,'Fatigue':72,
+                             'Sore Throat':38,'Body Ache':41,'Nausea':33,'Runny Nose':29},
         'disease_distribution':{'Flu':40,'Cold':35,'Migraine':25},
-        'monthly_cases':{'Jan':120,'Feb':98,'Mar':145,'Apr':87,'May':63,'Jun':55,'Jul':48,'Aug':52,'Sep':78,'Oct':110,'Nov':134,'Dec':160},
+        'monthly_cases':{'Jan':120,'Feb':98,'Mar':145,'Apr':87,'May':63,'Jun':55,
+                         'Jul':48,'Aug':52,'Sep':78,'Oct':110,'Nov':134,'Dec':160},
         'age_groups':{'0-18':15,'19-35':32,'36-50':28,'51-65':18,'65+':7},
         'recovery_rate':{'Flu':87,'Cold':95,'Migraine':78}
     })
@@ -372,7 +422,8 @@ def book_appointment():
 @app.route('/api/my-appointments')
 @login_required
 def my_appointments():
-    appts = Appointment.query.filter_by(patient_id=current_user.id).order_by(Appointment.created_at.desc()).all()
+    appts = Appointment.query.filter_by(
+        patient_id=current_user.id).order_by(Appointment.created_at.desc()).all()
     return jsonify({'appointments':[{
         'id':a.id,'doctor':a.doctor_name,'date':a.date,'time':a.time,
         'reason':a.reason,'status':a.status,'fee':a.fee,'paid':a.paid,
@@ -395,7 +446,8 @@ def pay_appointment(appt_id):
 def doctor_appointments():
     if current_user.role != 'doctor':
         return jsonify({'error':'Unauthorized'}), 403
-    appts = Appointment.query.filter_by(doctor_name=current_user.name).order_by(Appointment.created_at.desc()).all()
+    appts = Appointment.query.filter_by(
+        doctor_name=current_user.name).order_by(Appointment.created_at.desc()).all()
     return jsonify({'appointments':[{
         'id':a.id,'patient':a.patient_name,'patient_id':a.patient_id,
         'date':a.date,'time':a.time,'reason':a.reason,
@@ -420,7 +472,8 @@ def update_appointment(appt_id):
 def doctor_patients():
     if current_user.role != 'doctor':
         return jsonify({'error':'Unauthorized'}), 403
-    patient_ids = db.session.query(Appointment.patient_id).filter_by(doctor_name=current_user.name).distinct()
+    patient_ids = db.session.query(Appointment.patient_id).filter_by(
+        doctor_name=current_user.name).distinct()
     patients = User.query.filter(User.id.in_(patient_ids)).all()
     return jsonify({'patients':[{
         'id':p.id,'name':p.name,'email':p.email,'age':p.age,
@@ -432,11 +485,15 @@ def doctor_patients():
 def patient_records(patient_id):
     if current_user.role != 'doctor':
         return jsonify({'error':'Unauthorized'}), 403
-    records = HealthRecord.query.filter_by(user_id=patient_id).order_by(HealthRecord.created_at.desc()).all()
-    appts   = Appointment.query.filter_by(patient_id=patient_id, doctor_name=current_user.name).all()
+    records = HealthRecord.query.filter_by(
+        user_id=patient_id).order_by(HealthRecord.created_at.desc()).all()
+    appts = Appointment.query.filter_by(
+        patient_id=patient_id, doctor_name=current_user.name).all()
     return jsonify({
-        'records':[{'diagnosis':r.diagnosis,'confidence':r.confidence,'date':r.created_at.strftime('%d %b %Y')} for r in records],
-        'appointments':[{'date':a.date,'time':a.time,'reason':a.reason,'status':a.status} for a in appts]
+        'records':[{'diagnosis':r.diagnosis,'confidence':r.confidence,
+                    'date':r.created_at.strftime('%d %b %Y')} for r in records],
+        'appointments':[{'date':a.date,'time':a.time,
+                         'reason':a.reason,'status':a.status} for a in appts]
     })
 
 @app.route('/api/doctor/prescribe', methods=['POST'])
@@ -462,17 +519,20 @@ def doctor_earnings():
     if current_user.role != 'doctor':
         return jsonify({'error':'Unauthorized'}), 403
     appts = Appointment.query.filter_by(doctor_name=current_user.name).all()
-    total    = sum(a.fee for a in appts if a.paid)
-    pending  = sum(a.fee for a in appts if not a.paid and a.status=='confirmed')
-    return jsonify({'total_earned':total,'pending':pending,
-                    'total_appointments':len(appts),
-                    'confirmed':len([a for a in appts if a.status=='confirmed']),
-                    'pending_count':len([a for a in appts if a.status=='pending'])})
+    total   = sum(a.fee for a in appts if a.paid)
+    pending = sum(a.fee for a in appts if not a.paid and a.status=='confirmed')
+    return jsonify({
+        'total_earned':total,'pending':pending,
+        'total_appointments':len(appts),
+        'confirmed':len([a for a in appts if a.status=='confirmed']),
+        'pending_count':len([a for a in appts if a.status=='pending'])
+    })
 
 @app.route('/api/my-prescriptions')
 @login_required
 def my_prescriptions():
-    rxs = Prescription.query.filter_by(patient_id=current_user.id).order_by(Prescription.created_at.desc()).all()
+    rxs = Prescription.query.filter_by(
+        patient_id=current_user.id).order_by(Prescription.created_at.desc()).all()
     return jsonify({'prescriptions':[{
         'id':r.id,'doctor':r.doctor_name,'diagnosis':r.diagnosis,
         'medicines':r.medicines,'instructions':r.instructions,
@@ -490,8 +550,10 @@ def get_medicines():
     meds = q.all()
     if search:
         meds = [m for m in meds if search in m.name.lower() or search in m.desc.lower()]
-    return jsonify({'medicines':[{'id':m.id,'name':m.name,'category':m.category,
-        'price':m.price,'stock':m.stock,'img':m.img,'desc':m.desc} for m in meds]})
+    return jsonify({'medicines':[{
+        'id':m.id,'name':m.name,'category':m.category,
+        'price':m.price,'stock':m.stock,'img':m.img,'desc':m.desc
+    } for m in meds]})
 
 @app.route('/api/order', methods=['POST'])
 @login_required
@@ -506,7 +568,8 @@ def place_order():
 @app.route('/api/my-orders')
 @login_required
 def my_orders():
-    orders = Order.query.filter_by(user_id=current_user.id).order_by(Order.created_at.desc()).all()
+    orders = Order.query.filter_by(
+        user_id=current_user.id).order_by(Order.created_at.desc()).all()
     return jsonify({'orders':[{
         'id':o.id,'items':json.loads(o.items),'total':o.total,
         'status':o.status,'date':o.created_at.strftime('%d %b %Y')
@@ -515,7 +578,9 @@ def my_orders():
 @app.route('/api/my-records')
 @login_required
 def my_records():
-    records = HealthRecord.query.filter_by(user_id=current_user.id).order_by(HealthRecord.created_at.desc()).limit(20).all()
+    records = HealthRecord.query.filter_by(
+        user_id=current_user.id).order_by(
+        HealthRecord.created_at.desc()).limit(20).all()
     return jsonify({'records':[{
         'diagnosis':r.diagnosis,'confidence':r.confidence,
         'date':r.created_at.strftime('%d %b %Y %H:%M')
@@ -589,7 +654,7 @@ def admin_all_orders():
 def admin_update_order(order_id):
     if current_user.role != 'admin':
         return jsonify({'error':'Unauthorized'}), 403
-    data = request.get_json()
+    data  = request.get_json()
     order = Order.query.get_or_404(order_id)
     order.status = data.get('status', order.status)
     db.session.commit()
@@ -613,9 +678,9 @@ def admin_add_medicine():
     if current_user.role != 'admin':
         return jsonify({'error':'Unauthorized'}), 403
     data = request.get_json()
-    med = Medicine(name=data['name'],category=data['category'],
-                   price=data['price'],stock=data['stock'],
-                   img=data.get('img','💊'),desc=data['desc'])
+    med  = Medicine(name=data['name'],category=data['category'],
+                    price=data['price'],stock=data['stock'],
+                    img=data.get('img','💊'),desc=data['desc'])
     db.session.add(med)
     db.session.commit()
     return jsonify({'message':'Medicine added!','id':med.id})
@@ -626,7 +691,7 @@ def admin_update_medicine(med_id):
     if current_user.role != 'admin':
         return jsonify({'error':'Unauthorized'}), 403
     data = request.get_json()
-    med = Medicine.query.get_or_404(med_id)
+    med  = Medicine.query.get_or_404(med_id)
     for field in ['name','category','price','stock','desc','active']:
         if field in data: setattr(med, field, data[field])
     db.session.commit()
@@ -652,11 +717,13 @@ def admin_analytics():
     total_appts   = Appointment.query.count()
     total_orders  = Order.query.count()
     total_revenue = db.session.query(db.func.sum(Order.total)).scalar() or 0
-    appt_revenue  = db.session.query(db.func.sum(Appointment.fee)).filter_by(paid=True).scalar() or 0
+    appt_revenue  = db.session.query(
+        db.func.sum(Appointment.fee)).filter_by(paid=True).scalar() or 0
     return jsonify({
         'total_users':total_users,'total_doctors':total_doctors,
         'total_appointments':total_appts,'total_orders':total_orders,
-        'total_revenue':round(total_revenue,2),'appointment_revenue':round(appt_revenue,2),
+        'total_revenue':round(total_revenue,2),
+        'appointment_revenue':round(appt_revenue,2),
         'banned_users':User.query.filter_by(is_banned=True).count(),
         'pending_appointments':Appointment.query.filter_by(status='pending').count()
     })
@@ -668,7 +735,8 @@ def dev_db_stats():
     if current_user.role != 'developer':
         return jsonify({'error':'Unauthorized'}), 403
     return jsonify({
-        'tables':['user','appointment','prescription','message','order','health_record','medicine'],
+        'tables':['user','appointment','prescription','message',
+                  'order','health_record','medicine'],
         'counts':{
             'users':User.query.count(),
             'appointments':Appointment.query.count(),
@@ -686,70 +754,79 @@ def dev_logs():
     if current_user.role != 'developer':
         return jsonify({'error':'Unauthorized'}), 403
     recent_users = User.query.order_by(User.created_at.desc()).limit(5).all()
-    recent_appts = Appointment.query.order_by(Appointment.created_at.desc()).limit(5).all()
+    recent_appts = Appointment.query.order_by(
+        Appointment.created_at.desc()).limit(5).all()
     return jsonify({
-        'recent_signups':[{'name':u.name,'role':u.role,'date':u.created_at.strftime('%d %b %H:%M')} for u in recent_users],
-        'recent_appointments':[{'patient':a.patient_name,'doctor':a.doctor_name,'date':a.date,'status':a.status} for a in recent_appts]
+        'recent_signups':[{
+            'name':u.name,'role':u.role,
+            'date':u.created_at.strftime('%d %b %H:%M')
+        } for u in recent_users],
+        'recent_appointments':[{
+            'patient':a.patient_name,'doctor':a.doctor_name,
+            'date':a.date,'status':a.status
+        } for a in recent_appts]
     })
-# ─── NEW FEATURES ─────────────────────────────────────────
 
+# ─── NEW FEATURES ─────────────────────────────────────────
 @app.route('/api/bmi', methods=['POST'])
 def calculate_bmi():
-    data = request.get_json()
+    data   = request.get_json()
     weight = float(data['weight'])
     height = float(data['height']) / 100
-    bmi = round(weight / (height ** 2), 1)
+    bmi    = round(weight / (height ** 2), 1)
     if bmi < 18.5:
-        category = 'Underweight'
-        color = '#06b6d4'
-        advice = 'Consider a nutrient-rich diet. Consult a nutritionist.'
+        category,color,advice = 'Underweight','#06b6d4','Consider a nutrient-rich diet. Consult a nutritionist.'
     elif bmi < 25:
-        category = 'Normal weight'
-        color = '#10b981'
-        advice = 'Great! Maintain your healthy lifestyle.'
+        category,color,advice = 'Normal weight','#10b981','Great! Maintain your healthy lifestyle.'
     elif bmi < 30:
-        category = 'Overweight'
-        color = '#f59e0b'
-        advice = 'Consider more physical activity and a balanced diet.'
+        category,color,advice = 'Overweight','#f59e0b','Consider more physical activity and a balanced diet.'
     else:
-        category = 'Obese'
-        color = '#ef4444'
-        advice = 'Please consult a doctor for a health plan.'
-    return jsonify({'bmi': bmi, 'category': category,
-                    'color': color, 'advice': advice})
+        category,color,advice = 'Obese','#ef4444','Please consult a doctor for a health plan.'
+    return jsonify({'bmi':bmi,'category':category,'color':color,'advice':advice})
 
 @app.route('/api/notifications')
 @login_required
 def get_notifications():
     notifs = []
-    appts = Appointment.query.filter_by(patient_id=current_user.id).order_by(Appointment.created_at.desc()).limit(5).all()
+    appts = Appointment.query.filter_by(
+        patient_id=current_user.id).order_by(
+        Appointment.created_at.desc()).limit(5).all()
     for a in appts:
         if a.status == 'confirmed':
-            notifs.append({'type':'success','title':'Appointment Confirmed','msg':f'Dr. {a.doctor_name} confirmed your appointment on {a.date}','time':a.created_at.strftime('%H:%M')})
+            notifs.append({'type':'success','title':'Appointment Confirmed',
+                'msg':f'Dr. {a.doctor_name} confirmed your appointment on {a.date}',
+                'time':a.created_at.strftime('%H:%M')})
         elif a.status == 'rejected':
-            notifs.append({'type':'error','title':'Appointment Rejected','msg':f'Dr. {a.doctor_name} rejected your request','time':a.created_at.strftime('%H:%M')})
-    rxs = Prescription.query.filter_by(patient_id=current_user.id).order_by(Prescription.created_at.desc()).limit(3).all()
+            notifs.append({'type':'error','title':'Appointment Rejected',
+                'msg':f'Dr. {a.doctor_name} rejected your request',
+                'time':a.created_at.strftime('%H:%M')})
+    rxs = Prescription.query.filter_by(
+        patient_id=current_user.id).order_by(
+        Prescription.created_at.desc()).limit(3).all()
     for r in rxs:
-        notifs.append({'type':'info','title':'New Prescription','msg':f'Dr. {r.doctor_name} sent you a prescription for {r.diagnosis}','time':r.created_at.strftime('%H:%M')})
-    msgs = Message.query.filter_by(receiver_id=current_user.id, read=False).order_by(Message.created_at.desc()).limit(3).all()
+        notifs.append({'type':'info','title':'New Prescription',
+            'msg':f'Dr. {r.doctor_name} sent you a prescription for {r.diagnosis}',
+            'time':r.created_at.strftime('%H:%M')})
+    msgs = Message.query.filter_by(
+        receiver_id=current_user.id, read=False).order_by(
+        Message.created_at.desc()).limit(3).all()
     for m in msgs:
-        notifs.append({'type':'info','title':'New Message','msg':f'{m.sender_name}: {m.content[:40]}...','time':m.created_at.strftime('%H:%M')})
-    return jsonify({'notifications': notifs[:8], 'unread': len(notifs)})
+        notifs.append({'type':'info','title':'New Message',
+            'msg':f'{m.sender_name}: {m.content[:40]}...',
+            'time':m.created_at.strftime('%H:%M')})
+    return jsonify({'notifications':notifs[:8],'unread':len(notifs)})
 
 @app.route('/api/blood-donors')
 @login_required
 def blood_donors():
-    blood_group = request.args.get('blood_group', '')
-    users = User.query.filter_by(is_banned=False).all()
+    blood_group = request.args.get('blood_group','')
+    users  = User.query.filter_by(is_banned=False).all()
     donors = []
     for u in users:
         if u.blood_group and (not blood_group or u.blood_group == blood_group):
-            donors.append({
-                'name': u.name, 'blood_group': u.blood_group,
-                'phone': u.phone or 'Not provided',
-                'avatar': u.avatar
-            })
-    return jsonify({'donors': donors})
+            donors.append({'name':u.name,'blood_group':u.blood_group,
+                           'phone':u.phone or 'Not provided','avatar':u.avatar})
+    return jsonify({'donors':donors})
 
 @app.route('/api/health-news')
 def health_news():
@@ -763,79 +840,39 @@ def health_news():
         {'title':'New antibiotic discovered after 30 years of research','source':'Science','time':'1d ago','category':'Antibiotics','color':'#06b6d4'},
         {'title':'Exercise reduces depression risk by 43% says new study','source':'BMJ','time':'2d ago','category':'Mental Health','color':'#10b981'},
     ]
-    return jsonify({'news': news})
+    return jsonify({'news':news})
 
 @app.route('/api/video-call', methods=['POST'])
 @login_required
 def book_video_call():
     data = request.get_json()
     appt = Appointment(
-        patient_id=current_user.id,
-        patient_name=current_user.name,
-        doctor_name=data['doctor'],
-        date=data['date'],
-        time=data['time'],
-        reason=f"[VIDEO CALL] {data['reason']}",
-        fee=data.get('fee', 300)
+        patient_id=current_user.id, patient_name=current_user.name,
+        doctor_name=data['doctor'], date=data['date'], time=data['time'],
+        reason=f"[VIDEO CALL] {data['reason']}", fee=data.get('fee',300)
     )
     db.session.add(appt)
     db.session.commit()
-    return jsonify({'message':'Video call scheduled!', 'id':appt.id,
+    return jsonify({'message':'Video call scheduled!','id':appt.id,
                     'meet_link':f'https://meet.healthai.com/room/{appt.id}'})
 
 @app.route('/api/generate-report')
 @login_required
 def generate_report():
-    records = HealthRecord.query.filter_by(user_id=current_user.id).order_by(HealthRecord.created_at.desc()).limit(10).all()
-    appts   = Appointment.query.filter_by(patient_id=current_user.id).all()
-    rxs     = Prescription.query.filter_by(patient_id=current_user.id).all()
+    records = HealthRecord.query.filter_by(
+        user_id=current_user.id).order_by(
+        HealthRecord.created_at.desc()).limit(10).all()
+    appts = Appointment.query.filter_by(patient_id=current_user.id).all()
+    rxs   = Prescription.query.filter_by(patient_id=current_user.id).all()
     return jsonify({
-        'patient': {'name':current_user.name,'email':current_user.email,'age':current_user.age,'blood_group':current_user.blood_group},
-        'diagnoses': [{'diagnosis':r.diagnosis,'confidence':r.confidence,'date':r.created_at.strftime('%d %b %Y')} for r in records],
-        'appointments': len(appts),
-        'prescriptions': len(rxs),
-        'generated_at': datetime.utcnow().strftime('%d %b %Y %H:%M')
+        'patient':{'name':current_user.name,'email':current_user.email,
+                   'age':current_user.age,'blood_group':current_user.blood_group},
+        'diagnoses':[{'diagnosis':r.diagnosis,'confidence':r.confidence,
+                      'date':r.created_at.strftime('%d %b %Y')} for r in records],
+        'appointments':len(appts),'prescriptions':len(rxs),
+        'generated_at':datetime.utcnow().strftime('%d %b %Y %H:%M')
     })
 
 if __name__ == '__main__':
-    import os
-    app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'healthai_secret_2024_ruban_dev')
-    with app.app_context():
-        db.create_all()
-        # Seed medicines if empty
-        if Medicine.query.count() == 0:
-            medicines = [
-                Medicine(name='Paracetamol 500mg',category='Pain Relief',price=45,stock=150,img='💊',desc='For fever and mild pain relief'),
-                Medicine(name='Cetirizine 10mg',category='Allergy',price=65,stock=80,img='💊',desc='Antihistamine for allergy symptoms'),
-                Medicine(name='Amoxicillin 250mg',category='Antibiotic',price=120,stock=60,img='💊',desc='Broad spectrum antibiotic'),
-                Medicine(name='Ibuprofen 400mg',category='Pain Relief',price=55,stock=200,img='💊',desc='Anti-inflammatory pain relief'),
-                Medicine(name='Vitamin C 1000mg',category='Supplement',price=180,stock=300,img='🍊',desc='Immune system support'),
-                Medicine(name='Omeprazole 20mg',category='Gastric',price=95,stock=120,img='💊',desc='Acid reflux and gastric issues'),
-                Medicine(name='Metformin 500mg',category='Diabetes',price=75,stock=90,img='💊',desc='Blood sugar management'),
-                Medicine(name='Atorvastatin 10mg',category='Cardiac',price=140,stock=75,img='❤️',desc='Cholesterol management'),
-                Medicine(name='Zinc + Vitamin D',category='Supplement',price=220,stock=250,img='✨',desc='Immunity and bone health'),
-                Medicine(name='Cough Syrup 100ml',category='Respiratory',price=85,stock=110,img='🍶',desc='Dry and wet cough relief'),
-                Medicine(name='Eye Drops 10ml',category='Eye Care',price=65,stock=95,img='👁️',desc='Dry eye and irritation relief'),
-                Medicine(name='Antacid Tablets',category='Gastric',price=40,stock=400,img='💊',desc='Instant acidity relief'),
-            ]
-            for m in medicines: db.session.add(m)
-        # Seed default accounts
-        accounts = [
-            ('Admin','admin@healthai.com','admin123','admin','A'),
-            ('Dr. Priya Sharma','priya@healthai.com','doctor123','doctor','P'),
-            ('Dr. Arjun Mehta','arjun@healthai.com','doctor123','doctor','A'),
-            ('Dr. Sneha Rao','sneha@healthai.com','doctor123','doctor','S'),
-            ('Test Patient','user@healthai.com','user123','user','T'),
-            ('Dev Portal','dev@healthai.com','dev123secure','developer','D'),
-        ]
-        for name,email,pwd,role,av in accounts:
-            if not User.query.filter_by(email=email).first():
-                u = User(name=name,email=email,password=generate_password_hash(pwd),
-                         role=role,avatar=av)
-                if role == 'doctor':
-                    u.specialization = 'General Physician'
-                    u.experience = '10 yrs'
-                db.session.add(u)
-        db.session.commit()
-        print("✅ DB ready! All accounts seeded.")
-    app.run(debug=False, host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
+    app.run(debug=False, host='0.0.0.0',
+            port=int(os.environ.get('PORT', 5000)))
